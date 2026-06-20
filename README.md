@@ -255,6 +255,30 @@ style/color_scheme: native
 
 `native` 是鼠须管系统原生配色，不是一个完整写在 YAML 里的颜色表。
 
+### 预览鼠须管主题
+
+本仓库有一个本地预览页：
+
+```text
+tools/squirrel-theme-preview.html
+```
+
+推荐在仓库根目录启动一个本地静态服务：
+
+```bash
+python3 -m http.server 8765
+```
+
+然后打开：
+
+```text
+http://127.0.0.1:8765/tools/squirrel-theme-preview.html
+```
+
+页面会自动读取 `squirrel.yaml` 的 `preset_color_schemes` 并渲染所有主题样张。以后新增主题，刷新这个页面就能看到。
+
+如果直接双击打开 HTML，浏览器通常不能自动读取本地 `squirrel.yaml`，这时点页面里的“载入 YAML”，选择 `squirrel.yaml` 即可。
+
 ## Git 同步规则
 
 这个仓库提交源配置，不提交生成产物和本机状态。
