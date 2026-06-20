@@ -1,216 +1,330 @@
-# 说明
+# 我的 Rime 配置
 
-墨染清风书雅韵，奇思逸趣入诗文。音随浅唱凝清婉，形绘山河万象新。
+这是我的 Rime 配置仓库，基于 [gaboolic/rime-shuangpin-fuzhuma](https://github.com/gaboolic/rime-shuangpin-fuzhuma) 的墨奇音形方案做了个人化调整。
 
-重磅发布：墨奇音形，支持自然码、小鹤、搜狗、微软双拼。墨奇音形是一个基于字形描述信息、递归拆分，最后取首末双形音托的码表开源的方案。详见[墨奇码拆分规则](https://github.com/gaboolic/rime-shuangpin-fuzhuma/wiki/%E5%A2%A8%E5%A5%87%E7%A0%81%E6%8B%86%E5%88%86%E8%A7%84%E5%88%99)。[墨奇码](https://github.com/gaboolic/moqima-tables)的拆分码表已开源，目前已经拆分完成全部的通用规范汉字、常用繁体字，总计支持4万字（方案选单中支持大字集和小字集切换）。未来准备支持gb18030-2022标准的8万字。墨奇音形的方案支持ctrl+p开关显示墨奇辅助码+首末字形，ctrl+l开关显示墨奇拆字的拆分。
+核心目标不是极限简码，而是：
 
-重磅发布2：现在词库独立演进维护，改为使用745396750字的高质量语料，进行分词，重新统计字频、词频，归一化的[白霜词库](https://github.com/gaboolic/rime-frost)，白霜词库是目前rime方案下最好的词库，在不使用智能模型的情况下可以超越使用智能模型的词库方案。
+- 小鹤双拼节奏优先，两键一个字，尽量空格上屏
+- 常用单字和聊天短语稳定首选
+- 保留墨奇辅助码，用来处理冷门字和不好选的字
+- 关闭整句语言模型，减少候选被上下文模型重排
+- 用 Git 同步配置，但不同步本机生成数据
 
-重磅发布3：墨奇统一词库版，通过拼写运算实现的各种双拼和辅助码排列组合，各类双拼、各类辅助码统一用同一个词库，节省硬盘空间。例如小鹤双拼+虎码首末，微软双拼+墨奇码，自然码双拼+五笔前两码，紫光双拼+仓颉首末码等等。支持的双拼、辅助码运算规则在<https://github.com/gaboolic/rime-shuangpin-fuzhuma/blob/main/moqi_speller.yaml>。让天下双拼用户人人用得上辅助码。
+## 安装路径
 
-重磅发布4: 句中任意辅助码。
-![句中任意辅助码](readmeimg/input-juzhongfuzhuma.gif)
+macOS 鼠须管：
 
-更新日志：[更新日志.md](md/update-log.md)
-
-在线试用：[墨奇音形顶屏版](https://my-rime.vercel.app/?plum=gaboolic/rime-shuangpin-fuzhuma@master:moqi_single_xh)
-
-[墨奇音形大词库版](https://my-rime.vercel.app/?plum=gaboolic/rime-shuangpin-fuzhuma@master:moqi_wan_flypymo) (词库多，加载较慢)
-
-- [此仓库](https://github.com/gaboolic/rime-shuangpin-fuzhuma)为rime配置文件,词库使用[白霜词库](https://github.com/gaboolic/rime-frost)，实现自然码双拼、小鹤双拼、搜狗双拼、微软双拼等多种双拼，以及墨奇码（原创拆分开源支持4万字）、自然码部首辅、小鹤音形（鹤形辅）多种辅助码。本人日常用的是此仓库的方案，高强度使用，所以更新有保证。
-- 配置文件参考[小鹤双拼+自然快手/小鹤双形辅助码](https://github.com/functoreality/rime-flypy-zrmfast)
-- [魔改自然碼 Rime 方案 (自然碼雙拼+輔助碼+外語混輸+簡繁方案+emoji)](https://github.com/ksqsf/rime-moran)
-- 主要配置文件:
-  - schema: moqi_wan_flypymo # 墨奇辅助码 鹤拼版 大词库版本 非自动上屏，支持4万字
-  - schema: moqi_wan_zrm # 自然码+自然码部首辅助码 非自动上屏，支持4万字
-  - schema: moqi_wan_flypy # 鹤形+鹤拼, 小鹤官方就只有8000字左右
-  - schema: moqi_single_xh # 墨奇码·顶屏版·小鹤双拼，为了4码自动上屏 只收录了8000字
-- 写给选择困难症：如果第一次接触双拼，直接使用`moqi_wan_flypymo.schema.yaml`，墨奇辅助码 鹤拼版，这是作者用的方案;如果追求类似五笔的4码自动上屏体验，则使用`moqi_single_xh`墨奇码·顶屏版;本项目支持任意双拼和任意辅助码组合，选择自己熟悉的就好。
-- 注意：默认关了用户词库（为了固定词频），如有需要，修改`你使用的方案.schema.yaml enable_user_dict: true`开启
-- 默认固定词频，编辑`cn_dicts_common/user.dict.yaml`来添加自定义的词；推荐在用户词库关闭的情况下使用ac引导造词，这样自造词是在系统词库后面，不会影响系统词的字频和词序；如果要删除自造词，可以先打出这个自造词，再按 `↑` `↓` 方向键选中自造词，最后按 `Shift + Delete` 删除
-- 默认显示单字的辅助码编码，可在`你使用的方案.schema.yaml`中`translator/spelling_hints`调整为更多或不显示
-- 超级简拼：1码、2码、3码时，按下Tab（或者是/，或者是。都可以）自动上屏1字、2字词、3字词，不和空格上屏的单字冲突
-
-### FAQ（常见问题）q羣696353204/10885687
-
-  更多配置及功能请看：[FAQ.md](md/FAQ.md)
-
-### 如何安装&配置文件路径
-
-下载本仓库的压缩包Code - Download ZIP（或者下载[releases](https://github.com/gaboolic/rime-shuangpin-fuzhuma/releases)最新的source-code.zip），解压到如下路径即可
-
-- Windows: 
-  - 小狼毫：%APPDATA%\Roming\Rime （可以在右下角小狼毫输入法右键打开菜单选用户文件夹）复制完之后，去输入法设定里选择白霜拼音，然后重新部署
-  - [墨奇输入法](https://github.com/gaboolic/moqi-im-windows) Rime配置文件夹在：%APPDATA%\Roming\Moqi\Rime （可以在右下角输入法右键打开菜单选用户文件夹）
-- mac
-  - [鼠须管](https://github.com/rime/squirrel)路径为~/Library/Rime
-  - [fcitx5-mac版](https://github.com/fcitx-contrib/fcitx5-macos)路径为~/.local/share/fcitx5/rime
-- linux
-  - [fcitx5-rime](https://github.com/fcitx/fcitx5-rime)路径为~/.local/share/fcitx5/rime
-  - fcitx5 flatpak版的路径~/.var/app/org.fcitx.Fcitx5/data/fcitx5/rime
-  - [ibus-rime](https://github.com/rime/ibus-rime)路径为~/.config/ibus/rime
-- android
-  - [fcitx5-安卓版](https://github.com/fcitx5-android/fcitx5-android)路径为 /Android/data/org.fcitx.fcitx5.android/files/data/rime
-  - [同文](https://github.com/osfans/trime)路径为 /rime
-- ios [仓输入法](https://github.com/imfuxiao/Hamster) 目前已内置，也可以通过【输入方案设置 - 右上角加号 - 方案下载 - 覆盖并部署】来更新墨奇音形。
-
-如果会使用git基本操作，可以直接用git管理配置，首次：例如mac可以打开~/Library文件夹，然后`git clone --depth 1 https://github.com/gaboolic/rime-shuangpin-fuzhuma Rime`  后面在Rime文件夹执行`git pull`即可
-
-现在也支持[东风破](https://github.com/rime/plum)，选择配方（recipes/*.recipe.yaml）来进行安装或更新：
-
-- ℞ 安装或更新全部文件 执行`bash rime-install gaboolic/rime-shuangpin-fuzhuma:recipes/full`
-- ℞ 安装或更新所有的词库文件 执行`bash rime-install gaboolic/rime-shuangpin-fuzhuma:recipes/all_dicts`
-
-### 输入效果
-
-- 整句输入插入字辅：
-
-![醉洛阳](readmeimg/qimhzly.png)
-
-- 打词时插入辅助码：
-
-![寄宿](readmeimg/jisub.png)
-
-![极速](readmeimg/jimsu.png)
-
-- 整句句中任意辅助码，按`开启
-![句中任意辅助码](readmeimg/input-juzhongfuzhuma.gif)
-
-- 整句输入时增强单字性能，增加syffo或者syff/ 5码上屏单字的功能
-![zssr](readmeimg/zssr.png)
-
-- 不认识的字可以笔画输入 `ab`引导 hspnz横竖撇捺折
-
-![笔画](readmeimg/bihua.png)
-
-- 也可以部件组字输入 `az`引导
-
-![部件](readmeimg/bujian.png)
-
-![部件](readmeimg/bujian2.png)
-
-- 也可以输入仓颉码 `acj`引导
-
-![仓颉](readmeimg/cangjie5.png)
-
-- 通过opencc支持繁简转换、火星文、首末拆分字形(墨奇音形)
-
-![繁体](readmeimg/fantizi.png)
-
-![火星文](readmeimg/huoxingwen.png)
-
-![拆分](readmeimg/shoumo-chai.png)
-
-![全拆](readmeimg/quanchai.png)
-
-- 超级简拼：1码、2码、3码时，按下Tab（或者是/，或者是。都可以）自动上屏1字、2字词、3字词，不和空格上屏的单字冲突
-![等-蛋糕](readmeimg/dg-蛋糕.png)
-
-墨奇音形的方案支持ctrl+p开关显示墨奇辅助码+首末字形,ctrl+l开关显示墨奇拆字的拆分
-
-- 日期时间相关输入：`date time week` `datetime` `timestamp`
-
-  ![datetime](readmeimg/datetime.png)
-
-- 快捷日期输入：N开头
-
-  - ![Nmoshi](readmeimg/Nmoshi.png)
-
-- 符号输入`/fh`，更多符号查看`symbols_caps_v.yaml`
-
-  - ![fh](readmeimg/fh.png)
-
-- 大写数字：`R开头`
-  ![R123456](readmeimg/R123456.png)
-
-- 直接输入unicode：U开头
-  ![u2ffb](readmeimg/u2ffb.png)
-
-- 计算器功能(V模式) 感谢[ChaosAlphard](https://github.com/ChaosAlphard)的[pr](https://github.com/gaboolic/rime-shuangpin-fuzhuma/pull/41)
-  ![alt text](readmeimg/v_jsq.png)
-
-  - [计算器功能介绍](md/calc.md)
-  - ![1](md/assets/1.png)
-  
-- 英文输入：aw开头
-
-  - ![aw](readmeimg/aw.png)
-
-- 日文输入：aj开头
-
-  - ![aj](readmeimg/aj.png)
-
-- 翻译功能：ctrl + E开启英汉、汉英互译。
-  
-  - ![ink](readmeimg/ink.png)
-  - ![奇特](readmeimg/qite.png)
-
-- O符快符：o开头，快速输入各种符号偏旁部件，可以参考[快符](md/fuhao.md)      [部件](md/bujian.md)
-
-  - ![ofu2](readmeimg/ofu2.png)
-  - ![ofu](readmeimg/ofu.png)
-
-- 分号符：
-
-  - 因为实现分号符后，分号无法自动上屏，如果希望能使用分号符，可以进行以下操作 [分号符](md/fenhaofu.md)
-
-### 飞键 模糊音相关
-
-```
-# `你使用的方案.shema.yaml` 里飞键 可选择性开启
-- derive/^([yh])j/$1q/    # yj hj就可以打yq hq
-- derive/^qx/qw/  # qx就可以打qw
-模糊音同理，也是使用derive把平舌音翘舌音互转、前后鼻音互转，详见issue中的faq
+```text
+~/Library/Rime
 ```
 
-### 并击相关
+Windows 小狼毫：
 
-- [并击原理](https://github.com/gaboolic/rime-shuangpin-fuzhuma/wiki/%E5%B9%B6%E5%87%BB%E5%8E%9F%E7%90%86)
-
-### todo
-
+```text
+%APPDATA%\Rime
 ```
 
-4字成语的码表优化 补全
+Linux fcitx5：
 
-墨奇音形自然码下 e简码问题修复
-
-墨奇音形自动上屏版，4码为词，4码+/自动上屏单字，a-z顶词
-
-出简让全的开关、tab提示的开关
-
-字典功能，反查时生僻字显示读音和释义
-
+```text
+~/.local/share/fcitx5/rime
 ```
 
-### 鸣谢
+部署后在输入法菜单里点“重新部署”。
 
-雾凇拼音 <https://github.com/iDvel/rime-ice> 参考了其中很多配置
+## 当前启用方案
 
-白霜词库 <https://github.com/gaboolic/rime-frost> 本项目使用的词库和词频来自白霜词库
+配置入口是 `default.custom.yaml`：
 
-墨奇码码表 <https://github.com/gaboolic/moqima-tables> 墨奇音形的拆分
+```yaml
+schema_list:
+  - schema: moqi_wan_flypymo
+  - schema: moqi_wan_flypy
+```
 
-小鹤双拼+辅助码 <https://gitee.com/functoreality/rime-flypy-zrmfast>
+主力方案：
 
-魔然（自然码双拼辅助码）：<https://github.com/ksqsf/rime-moran>
+- `moqi_wan_flypymo`：墨奇 + 小鹤双拼 + 墨奇形
+- `moqi_wan_flypy`：墨奇 + 小鹤双拼 + 鹤形
 
-细胞词库&各个发行版配置 <https://github.com/Bambooin/rimerc>
+想启用/隐藏方案，改 `default.custom.yaml` 里的 `schema_list`，然后重新部署。
 
-az部件组字模式使用的词典 <https://github.com/mirtlecn/rime-radical-pinyin>
+## 我改了什么
 
-声笔输入法 <https://github.com/sbsrf/sbsrf> 使用了其中的lua脚本，参考了tab上屏简拼功能
+### 1. 让 custom 补丁真正生效
 
-星空键道：<https://github.com/xkinput/Rime_JD>
+这两个 schema 文件末尾显式加载了自己的 custom 补丁：
 
-英汉/汉英字典 <https://github.com/lxs602/Chinese-Mandarin-Dictionaries>
+- `moqi_wan_flypymo.schema.yaml`
+- `moqi_wan_flypy.schema.yaml`
 
-墨奇本猫：
+原因：原方案里同名 `*.custom.yaml` 没有稳定进入最终 build，导致重新部署后看起来“不生效”。
 
-<img src="readmeimg/moqi1.jpg" width=30%>
+### 2. 关闭整句语言模型
 
-<img src="readmeimg/moqi2.jpg" width=30%>
+在两个 custom 文件里：
 
-## Star History
+```yaml
+translator/contextual_suggestions: false
+grammar/language: ""
+```
 
-[![Star History Chart](https://api.star-history.com/svg?repos=gaboolic/rime-shuangpin-fuzhuma&type=Date)](https://star-history.com/#gaboolic/rime-shuangpin-fuzhuma&Date)
+效果：
+
+- 候选更接近词库词频和手动置顶表
+- 减少 `吗/的/是/了` 这类虚词被整句模型压低
+- 长句自动组句能力会弱一些
+
+这符合我的使用方式：更像微信输入法的短节奏输入，而不是打一长串让模型猜整句。
+
+### 3. 调整短码表优先级
+
+在两个 custom 文件里：
+
+```yaml
+custom_phrase/initial_quality: 100000
+custom_phrase_3_code/initial_quality: -1
+```
+
+意思是：
+
+- 保留 `custom_phrase.txt`，用来固定我想要的首选
+- 压低 `custom_phrase_3_code`，减少作者预设短码污染候选
+
+### 4. 清理会污染单字首选的短码
+
+在 `custom_phrase/custom_phrase.txt` 里注释了这些作者预设短码：
+
+```text
+# 使 ui 3
+# 得 de 2
+# 乐 le 2
+# 骂 ma 2
+```
+
+避免：
+
+```text
+ma -> 骂
+de -> 得
+ui -> 使
+le -> 乐
+```
+
+这种破坏节奏的情况。
+
+### 5. 增加个人节奏首选
+
+在 `custom_phrase/custom_phrase.txt` 末尾有一段：
+
+```text
+## 个人节奏首选
+```
+
+这里放我希望直接空格上屏的基础字和聊天短语，例如：
+
+```text
+吗    ma      100
+的    de      100
+是    ui      100
+了    le      100
+是的  uide    100
+是吗  uima    100
+会吗  hvma    100
+好的  hcde    100
+收到  uzdc    100
+谢谢  xpxp    100
+```
+
+## 日常怎么改
+
+### 增加常用聊天短语
+
+编辑：
+
+```text
+custom_phrase/custom_phrase.txt
+```
+
+找到：
+
+```text
+## 个人节奏首选
+```
+
+按这个格式加：
+
+```text
+词条<Tab>编码<Tab>权重
+```
+
+例子：
+
+```text
+会吗	hvma	100
+没问题	mwwfti	100
+知道了	vidcle	100
+```
+
+注意中间最好用 Tab，不要用空格。
+
+改完重新部署。
+
+### 调整候选数量
+
+编辑 `default.custom.yaml`：
+
+```yaml
+menu/page_size: 6
+```
+
+想一页显示 9 个就改成：
+
+```yaml
+menu/page_size: 9
+```
+
+### 开启用户词库学习
+
+现在是关闭的，保证候选稳定。
+
+如果想让 Rime 学习我的选择，在对应方案 custom 文件里取消注释：
+
+```yaml
+translator/enable_user_dict: true
+```
+
+文件：
+
+- `moqi_wan_flypymo.custom.yaml`
+- `moqi_wan_flypy.custom.yaml`
+
+取舍：
+
+- 开启后会越用越贴合习惯
+- 但候选顺序可能随使用变化
+
+### 重新打开语言模型
+
+不推荐，但可以。
+
+把 custom 文件里的：
+
+```yaml
+translator/contextual_suggestions: false
+grammar/language: ""
+```
+
+改回类似：
+
+```yaml
+translator/contextual_suggestions: true
+grammar/language: zh-moqi
+```
+
+效果：
+
+- 长句组句可能更强
+- 单字和短回复排序可能再次变差
+
+## 外观主题
+
+macOS 鼠须管外观配置：
+
+```text
+squirrel.custom.yaml
+```
+
+Windows 小狼毫外观配置：
+
+```text
+weasel.custom.yaml
+```
+
+当前只保留了 macOS 候选横排：
+
+```yaml
+style/candidate_list_layout: linear
+```
+
+鼠须管默认主题是：
+
+```yaml
+style/color_scheme: native
+```
+
+`native` 是鼠须管系统原生配色，不是一个完整写在 YAML 里的颜色表。
+
+## Git 同步规则
+
+这个仓库提交源配置，不提交生成产物和本机状态。
+
+`.gitignore` 已忽略：
+
+```text
+build/
+*.userdb/
+sync/
+installation.yaml
+user.yaml
+```
+
+这些文件不要提交：
+
+- `build/`：重新部署生成
+- `*.userdb/`：本机用户词库和学习数据
+- `sync/`：Rime 同步数据
+- `installation.yaml`：本机安装 ID
+- `user.yaml`：当前方案等本机状态
+
+## Windows 使用提示
+
+核心词库、schema、custom phrase 是跨平台的。
+
+macOS 专用：
+
+```text
+squirrel.yaml
+squirrel.custom.yaml
+```
+
+Windows 专用：
+
+```text
+weasel.yaml
+weasel.custom.yaml
+```
+
+如果在 Windows 上只想先使用输入方案和短语排序，可以直接 clone 到 `%APPDATA%\Rime`，重新部署即可。外观主题需要另外写 `weasel.custom.yaml`。
+
+## 常用测试
+
+重新部署后测试：
+
+```text
+ma    -> 吗
+de    -> 的
+ui    -> 是
+le    -> 了
+uide  -> 是的
+uima  -> 是吗
+hvma  -> 会吗
+hcde  -> 好的
+uzdc  -> 收到
+```
+
+如果没有变化：
+
+- 确认改的是源文件，不是 `build/`
+- 点“重新部署”
+- 切换一下方案再切回来
+- 重新聚焦输入框
+
+## 上游与许可
+
+本配置基于：
+
+- [gaboolic/rime-shuangpin-fuzhuma](https://github.com/gaboolic/rime-shuangpin-fuzhuma)
+- [gaboolic/rime-frost](https://github.com/gaboolic/rime-frost)
+
+原项目许可证保留在 `LICENSE`。
