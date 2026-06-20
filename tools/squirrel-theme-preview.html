@@ -7,14 +7,14 @@
   <style>
     :root {
       color-scheme: light;
-      --ink: #18201f;
-      --muted: #687270;
-      --line: #d7dedb;
-      --paper: #f6f8f5;
-      --panel: #ffffff;
-      --accent: #277a55;
-      --accent-soft: #e4f2eb;
-      --shadow: 0 16px 48px rgba(28, 48, 40, 0.12);
+      --ink: #1f2423;
+      --muted: #6f7774;
+      --line: #d8dfdc;
+      --paper: #f5f7f4;
+      --panel: rgba(255, 255, 255, 0.82);
+      --accent: #2f8d62;
+      --accent-soft: #e7f3ed;
+      --shadow: 0 18px 50px rgba(32, 48, 41, 0.12);
     }
 
     * {
@@ -25,75 +25,79 @@
       margin: 0;
       min-height: 100vh;
       background:
-        linear-gradient(90deg, rgba(39, 122, 85, 0.06) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(39, 122, 85, 0.06) 1px, transparent 1px),
-        radial-gradient(circle at 20% 0%, rgba(79, 174, 123, 0.18), transparent 36rem),
+        linear-gradient(180deg, rgba(239, 246, 241, 0.92), rgba(250, 251, 248, 0.98)),
         var(--paper);
-      background-size: 28px 28px, 28px 28px, auto, auto;
       color: var(--ink);
-      font-family: "Avenir Next", "Helvetica Neue", "PingFang SC", sans-serif;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
     }
 
     button,
-    input,
-    select {
+    input {
       font: inherit;
     }
 
+    button {
+      color: inherit;
+    }
+
     .shell {
-      width: min(1520px, calc(100vw - 36px));
+      width: min(1440px, calc(100vw - 32px));
       margin: 0 auto;
-      padding: 28px 0 42px;
+      padding: 24px 0 42px;
     }
 
     header {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
       align-items: end;
       margin-bottom: 18px;
     }
 
     h1 {
       margin: 0;
-      font-family: Georgia, "Songti SC", serif;
-      font-size: clamp(34px, 4vw, 64px);
-      font-weight: 650;
-      line-height: 0.98;
+      font-size: clamp(28px, 3.2vw, 46px);
+      font-weight: 760;
+      line-height: 1.05;
       letter-spacing: 0;
     }
 
     .subtitle {
       max-width: 760px;
-      margin: 14px 0 0;
+      margin: 10px 0 0;
       color: var(--muted);
-      font-size: 15px;
-      line-height: 1.7;
+      font-size: 14px;
+      line-height: 1.65;
     }
 
     .summary {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(92px, 1fr));
       gap: 10px;
+      min-width: min(480px, 42vw);
     }
 
     .metric {
-      min-height: 82px;
-      padding: 14px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.74);
-      box-shadow: var(--shadow);
+      padding: 12px 14px;
+      border: 1px solid rgba(205, 214, 210, 0.72);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: 0 10px 28px rgba(32, 48, 41, 0.07);
+      backdrop-filter: blur(18px);
     }
 
     .metric strong {
       display: block;
-      font-size: 28px;
-      line-height: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 24px;
+      line-height: 1.1;
+      white-space: nowrap;
     }
 
     .metric span {
       display: block;
-      margin-top: 8px;
+      margin-top: 6px;
       color: var(--muted);
       font-size: 12px;
     }
@@ -103,30 +107,38 @@
       top: 0;
       z-index: 10;
       display: grid;
-      grid-template-columns: minmax(180px, 1fr) minmax(160px, 0.7fr) minmax(180px, 0.9fr) auto auto;
+      grid-template-columns: minmax(190px, 1fr) minmax(120px, 0.45fr) minmax(240px, 0.9fr) auto auto auto;
       gap: 10px;
-      padding: 12px;
-      margin-bottom: 18px;
-      border: 1px solid rgba(160, 172, 167, 0.58);
-      background: rgba(250, 252, 249, 0.88);
-      backdrop-filter: blur(18px);
-      box-shadow: 0 8px 28px rgba(35, 55, 47, 0.12);
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(190, 201, 196, 0.72);
+      border-radius: 18px;
+      background: rgba(249, 251, 248, 0.86);
+      box-shadow: 0 12px 34px rgba(32, 48, 41, 0.1);
+      backdrop-filter: blur(22px);
     }
 
     .control {
       min-width: 0;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 9px;
       height: 42px;
       padding: 0 12px;
-      border: 1px solid var(--line);
-      background: var(--panel);
+      border: 1px solid rgba(204, 214, 210, 0.82);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    .control span {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
     }
 
     .control input[type="search"],
-    .control input[type="text"],
-    .control select {
+    .control input[type="text"] {
       width: 100%;
       min-width: 0;
       border: 0;
@@ -139,7 +151,7 @@
       justify-content: center;
       cursor: pointer;
       color: var(--accent);
-      font-weight: 650;
+      font-weight: 700;
     }
 
     .control.file input {
@@ -152,32 +164,67 @@
     }
 
     .toggle input {
-      width: 17px;
-      height: 17px;
+      width: 16px;
+      height: 16px;
       accent-color: var(--accent);
+    }
+
+    .segmented {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(74px, 1fr));
+      gap: 4px;
+      height: 42px;
+      padding: 4px;
+      border: 1px solid rgba(204, 214, 210, 0.82);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .segmented label {
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 720;
+      user-select: none;
+    }
+
+    .segmented input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .segmented label:has(input:checked) {
+      background: #1f2423;
+      color: #ffffff;
+      box-shadow: 0 5px 16px rgba(31, 36, 35, 0.18);
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
       gap: 14px;
     }
 
     .card {
       min-width: 0;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.78);
-      box-shadow: var(--shadow);
       overflow: hidden;
+      border: 1px solid rgba(207, 216, 212, 0.82);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.76);
+      box-shadow: 0 10px 30px rgba(32, 48, 41, 0.08);
     }
 
     .card-head {
       display: flex;
-      align-items: start;
+      align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 14px 14px 10px;
-      border-bottom: 1px solid rgba(216, 224, 220, 0.8);
+      padding: 13px 14px 11px;
+      border-bottom: 1px solid rgba(220, 226, 223, 0.76);
     }
 
     .title {
@@ -186,57 +233,99 @@
 
     .theme-name {
       margin: 0;
-      font-size: 16px;
-      font-weight: 750;
-      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-size: 15px;
+      font-weight: 760;
+      line-height: 1.2;
+      white-space: nowrap;
     }
 
     .theme-id {
       margin-top: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
       color: var(--muted);
-      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
       font-size: 12px;
+      white-space: nowrap;
     }
 
     .copy {
       flex: 0 0 auto;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(190, 210, 200, 0.9);
+      border-radius: 11px;
       background: var(--accent-soft);
-      color: #17422f;
+      color: #1f6f4b;
       padding: 7px 10px;
       cursor: pointer;
+      font-weight: 700;
     }
 
     .copy:hover {
-      border-color: #88b79e;
+      border-color: rgba(78, 151, 111, 0.82);
+      background: #d9ede4;
     }
 
     .stage {
-      padding: 18px 14px 16px;
+      min-height: 168px;
+      padding: 22px 14px 24px;
       background:
-        linear-gradient(135deg, rgba(0, 0, 0, 0.04) 25%, transparent 25%) 0 0 / 18px 18px,
-        linear-gradient(315deg, rgba(0, 0, 0, 0.04) 25%, transparent 25%) 0 0 / 18px 18px,
-        #eef2ef;
+        linear-gradient(135deg, rgba(43, 59, 53, 0.035) 25%, transparent 25%) 0 0 / 16px 16px,
+        linear-gradient(315deg, rgba(43, 59, 53, 0.035) 25%, transparent 25%) 0 0 / 16px 16px,
+        #eef3ef;
     }
 
     body.dark-canvas .stage {
       background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%) 0 0 / 18px 18px,
-        linear-gradient(315deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%) 0 0 / 18px 18px,
-        #1b2020;
+        linear-gradient(135deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%) 0 0 / 16px 16px,
+        linear-gradient(315deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%) 0 0 / 16px 16px,
+        #202524;
     }
 
-    .rime-window {
+    .mac-field {
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 0 4px 8px;
+      padding: 0 2px;
+      color: #1d1d1f;
+      font-size: 18px;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    body.dark-canvas .mac-field {
+      color: #f2f2f2;
+    }
+
+    .mac-field span {
+      border-bottom: 2px solid #9b3f94;
+    }
+
+    .ime-window {
       width: 100%;
-      max-width: 640px;
+      max-width: 720px;
       margin: 0 auto;
+      color: var(--s-text);
+    }
+
+    .ime-window.mac {
+      padding: 0;
+      border: 1px solid var(--s-border);
+      border-radius: 9px;
+      background: var(--s-bg);
+      box-shadow:
+        0 18px 42px rgba(0, 0, 0, 0.18),
+        0 1px 1px rgba(255, 255, 255, 0.68) inset;
+      backdrop-filter: blur(24px) saturate(1.25);
+      overflow: hidden;
+    }
+
+    .ime-window.win {
       padding: var(--outer-y, 6px) var(--outer-x, 8px);
       border: var(--border-width, 1px) solid var(--s-border);
       border-radius: var(--radius, 5px);
       background: var(--s-bg);
-      color: var(--s-text);
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
       overflow: hidden;
     }
@@ -265,6 +354,13 @@
       gap: 4px;
     }
 
+    .mac .candidate-row {
+      flex-wrap: nowrap;
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
     .cand {
       min-width: 0;
       display: inline-flex;
@@ -279,15 +375,34 @@
       white-space: nowrap;
     }
 
+    .mac .cand {
+      gap: 4px;
+      padding: 8px 10px 9px;
+      border-radius: 0;
+      font-size: 16px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
     .cand .label {
       color: var(--s-label);
       font-weight: 720;
+    }
+
+    .mac .cand .label {
+      color: var(--s-label);
+      font-weight: 560;
     }
 
     .cand .comment {
       color: var(--s-comment);
       font-size: 15px;
       opacity: 0.9;
+    }
+
+    .mac .cand .comment {
+      margin-left: 2px;
+      font-size: 13px;
     }
 
     .cand.active {
@@ -306,14 +421,15 @@
     .swatches {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
-      gap: 6px;
-      padding: 12px 14px 14px;
-      border-top: 1px solid rgba(216, 224, 220, 0.8);
+      gap: 5px;
+      padding: 10px 14px 13px;
+      border-top: 1px solid rgba(220, 226, 223, 0.76);
     }
 
     .swatch {
-      height: 24px;
+      height: 18px;
       border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 6px;
       background: var(--swatch);
     }
 
@@ -322,6 +438,7 @@
       margin: 0 0 14px;
       padding: 12px 14px;
       border: 1px solid #e1c775;
+      border-radius: 12px;
       background: #fff7d6;
       color: #614b00;
       line-height: 1.6;
@@ -335,6 +452,7 @@
       display: none;
       padding: 38px;
       border: 1px dashed var(--line);
+      border-radius: 18px;
       color: var(--muted);
       text-align: center;
       background: rgba(255, 255, 255, 0.58);
@@ -344,31 +462,29 @@
       display: block;
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 980px) {
       header {
         grid-template-columns: 1fr;
       }
 
-      .toolbar {
-        grid-template-columns: 1fr;
-        position: static;
+      .summary {
+        min-width: 0;
       }
 
-      .summary {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+        position: static;
       }
     }
 
-    @media (max-width: 520px) {
+    @media (max-width: 620px) {
       .shell {
-        width: min(100vw - 20px, 1520px);
+        width: min(100vw - 20px, 1440px);
         padding-top: 16px;
       }
 
-      .summary {
-        grid-template-columns: 1fr;
-      }
-
+      .summary,
+      .toolbar,
       .grid {
         grid-template-columns: 1fr;
       }
@@ -379,8 +495,8 @@
   <main class="shell">
     <header>
       <section>
-        <h1>鼠须管主题样张墙</h1>
-        <p class="subtitle">自动读取 <code>squirrel.yaml</code> 中的 <code>preset_color_schemes</code>，把每套主题渲染成候选框样张。新增主题后刷新页面即可更新；直接打开文件时可手动选择 <code>squirrel.yaml</code>。</p>
+        <h1>鼠须管主题预览</h1>
+        <p class="subtitle">读取 <code>squirrel.yaml</code> 的 <code>preset_color_schemes</code>，按 macOS / Windows 两种候选窗外壳预览同一套配色。</p>
       </section>
       <section class="summary" aria-label="summary">
         <div class="metric"><strong id="themeCount">0</strong><span>主题</span></div>
@@ -402,6 +518,10 @@
         <span>候选</span>
         <input id="candidateText" type="text" value="是的,使得,时的,似的,诗的,湿的">
       </label>
+      <fieldset class="segmented" aria-label="platform">
+        <label><input type="radio" name="platform" value="mac" checked>macOS</label>
+        <label><input type="radio" name="platform" value="win">Windows</label>
+      </fieldset>
       <label class="control toggle">
         <input id="darkCanvas" type="checkbox">
         <span>暗底</span>
@@ -422,6 +542,7 @@
       themes: [],
       style: {},
       sourceName: "squirrel.yaml",
+      platform: "mac",
     };
 
     const colorKeys = [
@@ -455,6 +576,7 @@
       candidateText: document.querySelector("#candidateText"),
       darkCanvas: document.querySelector("#darkCanvas"),
       fileInput: document.querySelector("#fileInput"),
+      platformInputs: document.querySelectorAll("input[name='platform']"),
     };
 
     function stripInlineComment(line) {
@@ -556,24 +678,25 @@
 
     function cssFor(theme) {
       const cfg = effectiveConfig(theme);
-      const text = toRgba(cfg.text_color, "#222");
+      const mac = state.platform === "mac";
+      const text = toRgba(cfg.text_color, mac ? "#1d1d1f" : "#222");
       const candidate = toRgba(cfg.candidate_text_color, text);
-      const label = toRgba(cfg.label_color, candidate);
+      const label = toRgba(cfg.label_color, mac ? "rgba(109, 109, 114, 0.95)" : candidate);
       const comment = toRgba(cfg.comment_text_color, label);
-      const hiBg = toRgba(cfg.hilited_candidate_back_color, toRgba(cfg.hilited_back_color, "#4b5563"));
+      const hiBg = toRgba(cfg.hilited_candidate_back_color, toRgba(cfg.hilited_back_color, mac ? "rgba(222, 178, 222, 0.82)" : "#4b5563"));
       const hiText = toRgba(cfg.hilited_candidate_text_color, text);
       const hiLabel = toRgba(cfg.hilited_candidate_label_color, hiText);
       const hiComment = toRgba(cfg.hilited_comment_text_color, hiText);
-      const radius = parseNum(cfg.corner_radius, parseNum(state.style.corner_radius, 5));
-      const hiRadius = parseNum(cfg.hilited_corner_radius, radius);
+      const radius = parseNum(cfg.corner_radius, parseNum(state.style.corner_radius, mac ? 9 : 5));
+      const hiRadius = parseNum(cfg.hilited_corner_radius, mac ? 0 : radius);
       const borderWidth = Math.max(parseNum(cfg.border_width, 1), 1);
       const outerX = Math.max(parseNum(cfg.border_width, 8), 4);
       const outerY = Math.max(parseNum(cfg.border_height, 6), 4);
       const spacing = Math.max(parseNum(cfg.spacing, 8), 3);
 
       return [
-        `--s-bg:${toRgba(cfg.back_color, "#fff")}`,
-        `--s-border:${toRgba(cfg.border_color, "rgba(0,0,0,.12)")}`,
+        `--s-bg:${toRgba(cfg.back_color, mac ? "rgba(248, 248, 248, 0.86)" : "#fff")}`,
+        `--s-border:${toRgba(cfg.border_color, mac ? "rgba(0,0,0,.2)" : "rgba(0,0,0,.12)")}`,
         `--s-text:${text}`,
         `--s-preedit-bg:${toRgba(cfg.preedit_back_color, "transparent")}`,
         `--s-cand:${candidate}`,
@@ -606,7 +729,8 @@
 
     function candidateMarkup(theme) {
       const cfg = effectiveConfig(theme);
-      const layout = cfg.candidate_list_layout === "stacked" ? " stacked" : "";
+      const stacked = state.platform === "win" && cfg.candidate_list_layout === "stacked";
+      const layout = stacked ? " stacked" : "";
       const words = els.candidateText.value.split(",").map((item) => item.trim()).filter(Boolean).slice(0, 6);
       return `<div class="candidate-row${layout}">${words.map((word, index) => {
         const active = index === 0 ? " active" : "";
@@ -623,6 +747,26 @@
         .replace(/"/g, "&quot;");
     }
 
+    function previewMarkup(theme) {
+      const platform = state.platform;
+      const preedit = escapeHtml(els.preedit.value);
+      if (platform === "mac") {
+        return `
+          <div class="mac-field"><span>${preedit}</span></div>
+          <div class="ime-window mac" style="${cssFor(theme)}">
+            ${candidateMarkup(theme)}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="ime-window win" style="${cssFor(theme)}">
+          <div class="preedit">${preedit}</div>
+          ${candidateMarkup(theme)}
+        </div>
+      `;
+    }
+
     function card(theme) {
       const cfg = effectiveConfig(theme);
       const name = cfg.name || theme.id;
@@ -636,12 +780,7 @@
             </div>
             <button class="copy" data-copy="${escapeHtml(theme.id)}">复制</button>
           </div>
-          <div class="stage">
-            <div class="rime-window" style="${cssFor(theme)}">
-              <div class="preedit">${escapeHtml(els.preedit.value)}</div>
-              ${candidateMarkup(theme)}
-            </div>
-          </div>
+          <div class="stage">${previewMarkup(theme)}</div>
           <div class="swatches">${swatchList(theme)}</div>
         </article>
       `;
@@ -708,6 +847,12 @@
     els.candidateText.addEventListener("input", render);
     els.darkCanvas.addEventListener("change", () => {
       document.body.classList.toggle("dark-canvas", els.darkCanvas.checked);
+    });
+    els.platformInputs.forEach((input) => {
+      input.addEventListener("change", () => {
+        state.platform = input.value;
+        render();
+      });
     });
     els.fileInput.addEventListener("change", async (event) => {
       const file = event.target.files && event.target.files[0];
