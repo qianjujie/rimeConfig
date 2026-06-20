@@ -489,23 +489,24 @@
         if (!raw.trim() || raw.trim().startsWith("#")) continue;
         const indent = raw.match(/^ */)[0].length;
         const clean = stripInlineComment(raw).trimEnd();
-        if (!clean.trim()) continue;
+        const trimmed = clean.trim();
+        if (!trimmed) continue;
 
         if (indent === 0) {
-          const top = clean.match(/^([A-Za-z0-9_/-]+):\s*$/);
+          const top = trimmed.match(/^([A-Za-z0-9_/-]+):\s*$/);
           section = top ? top[1] : "";
           currentScheme = "";
           continue;
         }
 
         if (section === "style" && indent === 2) {
-          const pair = clean.match(/^([A-Za-z0-9_/-]+):\s*(.*)$/);
+          const pair = trimmed.match(/^([A-Za-z0-9_/-]+):\s*(.*)$/);
           if (pair) style[pair[1]] = cleanValue(pair[2]);
           continue;
         }
 
         if (section === "preset_color_schemes" && indent === 2) {
-          const scheme = clean.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+          const scheme = trimmed.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
           if (scheme) {
             currentScheme = scheme[1];
             schemes[currentScheme] = schemes[currentScheme] || {};
@@ -514,7 +515,7 @@
         }
 
         if (section === "preset_color_schemes" && currentScheme && indent >= 4) {
-          const pair = clean.match(/^([A-Za-z0-9_/-]+):\s*(.*)$/);
+          const pair = trimmed.match(/^([A-Za-z0-9_/-]+):\s*(.*)$/);
           if (pair) schemes[currentScheme][pair[1]] = cleanValue(pair[2]);
         }
       }
