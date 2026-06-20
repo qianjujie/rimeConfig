@@ -1,0 +1,7 @@
+# squirrel.custom.yaml
+# macOS 鼠须管「外观」的补丁文件。部署时合并进 squirrel.yaml。
+# squirrel.yaml 本身不要改，改这里。改完点「重新部署」生效。
+
+patch:
+  # 候选排列：linear = 横排，stacked = 竖排
+  style/candidate_list_layout: linear

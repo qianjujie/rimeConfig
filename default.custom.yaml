@@ -1,0 +1,32 @@
+# default.custom.yaml
+# 全局配置的「补丁」文件。部署时 RIME 会把下面 patch: 里的内容
+# 合并进 default.yaml —— default.yaml 本身不要改，改这里就好。
+#
+# 用法：在 patch: 下用「点号路径」定位 default.yaml 里的字段进行覆盖。
+# 改完务必在鼠须管菜单点「重新部署」才生效。
+
+patch:
+  # ===== 启用的方案列表（整体替换 default.yaml 的 schema_list）=====
+  # 想启用更多墨奇方案，把对应行的 # 去掉即可。
+  schema_list:
+    - schema: moqi_wan_flypymo   # 墨奇·小鹤双拼 + 墨奇形（推荐）
+    - schema: moqi_wan_flypy     # 墨奇·小鹤双拼 + 鹤形
+    # - schema: moqi_single_xh     # 墨奇码·顶屏版·小鹤双拼（4码自动上屏，8000字）
+    # - schema: moqi_wan_zrm             # 墨奇·自然码 + 自然码部首辅
+    # - schema: moqi_wan_zrm_hx          # 墨奇·自然码 + 汉心码辅
+    # - schema: moqi_wan_ms_wb           # 墨奇·微软双拼 + 五笔
+    # - schema: moqi_wan_sogou           # 墨奇·搜狗双拼 + 墨奇形
+    # - schema: moqi_wan_flypyhu         # 墨奇·小鹤双拼 + 虎形
+    # - schema: moqi_wan_jdh             # 墨奇·小鹤双拼 + 简单鹤
+    # - schema: moqi_wan_quanpin_moqi    # 墨奇·全拼 + 墨奇形
+    # - schema: moqi_wan_abc_mo          # 墨奇·智能ABC双拼 + 墨奇形
+
+  # ===== 方案选单（Control+` 呼出）=====
+  switcher/caption: 〔方案選單〕
+  switcher/hotkeys:
+    - Control+grave
+    - Control+Shift+grave
+
+  # ===== 候选词个数 =====
+  menu/page_size: 6            # 一页显示几个候选；想多看几个可改成 9
+  # 注：候选横/竖排在 macOS 鼠须管里由 squirrel.custom.yaml 控制，不在这里。
