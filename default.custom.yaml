@@ -10,7 +10,7 @@ patch:
   # 当前主力：墨奇小鹤双拼 + 墨奇形。白霜保留在本地，先不启用。
   schema_list:
     - schema: moqi_wan_flypymo   # 墨奇·小鹤双拼 + 墨奇形
-    - schema: moqi_wan_flypy     # 墨奇·小鹤双拼 + 鹤形
+    # - schema: moqi_wan_flypy     # 墨奇·小鹤双拼 + 鹤形
     # - schema: rime_frost_double_pinyin_flypy  # 白霜小鹤双拼 + ` 辅助码
     # - schema: moqi_single_xh     # 墨奇码·顶屏版·小鹤双拼（4码自动上屏，8000字）
     # - schema: moqi_wan_zrm             # 墨奇·自然码 + 自然码部首辅
@@ -37,7 +37,6 @@ patch:
     - mars
     - ascii_punct
     - pin_cand
-    - extended_charset
 
   # ===== 候选词个数 =====
   menu/page_size: 6            # 一页显示几个候选；想多看几个可改成 9
