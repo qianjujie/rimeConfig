@@ -8,6 +8,16 @@ patch:
   custom_phrase_3_code/initial_quality: -1
   stick/enabled: true
 
+  # 小字集：过滤掉四万字大字集里鼠须管/当前字体容易显示成「?」的扩展字。
+  # F4 方案菜单里可切换「小字集 / 大字集」，日常默认用小字集。
+  switches/@7:
+    name: extended_charset
+    reset: 0
+    states: [ 小字集, 大字集 ]
+  translator/enable_charset_filter: true
+  user_dict_set/enable_charset_filter: true
+  add_user_dict/enable_charset_filter: true
+
   # 次要：关掉整句语言模型，避免虚词被「句首合理性」降权，并去掉整句联想。
   translator/contextual_suggestions: false
   grammar/language: ""
