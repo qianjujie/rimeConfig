@@ -22,13 +22,23 @@ style:
   translucency: true      # 透明度總開關
 
   # 淺色主题
-  color_scheme: native # phub
+  color_scheme: wechat # phub
   # 深色主题
-  color_scheme_dark: native # phub
+  color_scheme_dark: wechat_dark # phub
+  candidate_format: '%c %@' #旧格式里 %c 是编号，%@ 是候选项内容。新版写法则推荐用 [label]、[candidate]、[comment] 这种占位符。
+  # \u3000  全角空格，约 1 个中文字符宽，太大
+  # \u2003  em space，约 1em，较大
+  # \u2002  en space，约 1/2em，推荐试
+  # \u2004  约 1/3em
+  # \u2005  约 1/4em
+  # \u2006  约 1/6em
+  # \u2009  thin space，很窄
+  # \u200A  hair space，极窄
+  # 普通空格  半角空格，受字体影响
 
   # 默認界面設置 (會被具體主題覆寫)
   font_point: 14
-  font_face: LXGW WenKai
+  font_face: "LXGW WenKai,HanaMinA,HanaMinB,PingFang SC"
   corner_radius: 5
   # hilited_corner_radius: 5
   line_spacing: 8
@@ -932,49 +942,43 @@ preset_color_schemes:
     text_color: 0xFFFFFF
     hilited_corner_radius: 0
 
-  # https://gist.github.com/zsakvo/fff6e4859265d5d629439d5ccb553f8a
   wechat:
-    name: '微信' # 配色取自微信键盘
-    author: zsakvo
+    name: '微信'
+    author: qianjj
     back_color: 0xFFFFFF
-    border_height: 0
-    border_width: 8
-    candidate_format: '%c %@ '
+    candidate_format: "\u2004[label]\u2004[candidate]\u2004[comment]"
     comment_text_color: 0x999999
     corner_radius: 5
-    hilited_corner_radius: 5
     font_face: PingFangSC
-    font_point: 16
+    font_point: 14
     hilited_candidate_back_color: 0x75B100
     hilited_candidate_text_color: 0xFFFFFF
+    hilited_comment_text_color: 0x88FFFFFF
     candidate_list_layout: linear
     inline_preedit: true
-    label_font_point: 12
+    label_font_point: 10
     text_color: 0x424242
 
-  # https://gist.github.com/shlroland/78b3af88b993116c6f3e14b30cfefac0#file-yaml
   wechat_dark:
     name: '微信·暗' # 配色取自微信键盘
-    author: shlroland
+    author: qianjj
+    #back_color: 0x151515
     back_color: 0x151515
-    border_color: 0x151515
-    border_height: 0
-    border_width: 8
     candidate_format: '%c %@ '
     comment_text_color: 0xAEAEAE
     corner_radius: 5
-    hilited_corner_radius: 5
     font_face: PingFangSC
-    font_point: 16
-    hilited_candidate_back_color: 0x75B100
-    hilited_candidate_text_color: 0xFFFFFF
+    font_point: 14
+    hilited_candidate_back_color: 0xEE8B4E01
+    hilited_candidate_text_color: 0xDFDFDF
+    hilited_comment_text_color: 0x88FFFFFF
     candidate_list_layout: linear
     inline_preedit: true
-    label_font_point: 12
+    label_font_point: 10
     label_color: 0x777777
     text_color: 0xBBBBBB
-  
-    
+
+
   phub:
     name: 'phub' # 配色取自phub
     author: phub

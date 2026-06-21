@@ -20,6 +20,7 @@ switches_engine:
     processors:
       - ascii_composer
       - recognizer
+      - lua_processor@*private_phrase.processor # 私密短语 Tab 上屏
       - lua_processor@*sbxlm.key_binder # 绑定按键
       - key_binder
       - speller
@@ -53,6 +54,7 @@ switches_engine:
       - lua_translator@*unicode            # Unicode
       - lua_translator@*card_number
       - lua_translator@*number_translator  # 数字、金额大写
+      - lua_translator@*private_phrase.translator # 本机私密快捷短语，不提交真实内容
       - lua_translator@*calculator    # 计算器
       - punct_translator
       # 码表翻译器 用于仓颉、五笔等基于码表的输入方案
@@ -102,6 +104,7 @@ switches_engine:
       - simplifier@traditionalize                     # 简繁切换
       - simplifier@mars                               #火星文
       - uniquifier
+      - lua_filter@*private_phrase.filter         # 候选文本触发私密短语，如“紫薇”置顶并显示地址提示
 
 grammar:
   language: zh-moqi  # 这个很小几乎不起作用但是不能不配置，为了让non_collocation_penalty生效（只要有值就行 不过模型不存在日志里会报错）

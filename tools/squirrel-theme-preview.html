@@ -102,20 +102,89 @@
       font-size: 12px;
     }
 
-    .toolbar {
+    .controls-panel {
       position: sticky;
       top: 0;
       z-index: 10;
-      display: grid;
-      grid-template-columns: minmax(190px, 1fr) minmax(120px, 0.45fr) minmax(240px, 0.9fr) auto auto auto;
-      gap: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       padding: 10px;
       margin-bottom: 16px;
       border: 1px solid rgba(190, 201, 196, 0.72);
       border-radius: 18px;
-      background: rgba(249, 251, 248, 0.86);
+      background: rgba(249, 251, 248, 0.9);
       box-shadow: 0 12px 34px rgba(32, 48, 41, 0.1);
       backdrop-filter: blur(22px);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(190px, 1fr) minmax(120px, 0.45fr) minmax(240px, 0.9fr) auto auto auto;
+      gap: 10px;
+    }
+
+    .converter {
+      display: grid;
+      grid-template-columns: minmax(210px, 0.62fr) auto minmax(250px, 1fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .converter .control {
+      height: 38px;
+    }
+
+    .color-picker {
+      width: 42px;
+      height: 38px;
+      padding: 4px;
+      border: 1px solid rgba(204, 214, 210, 0.82);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.88);
+      cursor: pointer;
+    }
+
+    .color-result {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      border: 1px solid rgba(204, 214, 210, 0.82);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .color-chip {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 20px;
+      padding: 0;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 6px;
+      background: var(--chip, transparent);
+      cursor: pointer;
+    }
+
+    .color-chip:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .color-output {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .color-output code {
+      color: #1f2423;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-weight: 760;
     }
 
     .control {
@@ -303,15 +372,15 @@
     }
 
     .ime-window {
-      width: 100%;
+      width: fit-content;
       max-width: 720px;
       margin: 0 auto;
       color: var(--s-text);
     }
 
     .ime-window.mac {
-      padding: 0;
-      border: 1px solid var(--s-border);
+      padding: var(--outer-y, 0) var(--outer-x, 0);
+      border: var(--border-width, 0) solid var(--s-border);
       border-radius: 9px;
       background: var(--s-bg);
       box-shadow:
@@ -322,6 +391,7 @@
     }
 
     .ime-window.win {
+      width: 100%;
       padding: var(--outer-y, 6px) var(--outer-x, 8px);
       border: var(--border-width, 1px) solid var(--s-border);
       border-radius: var(--radius, 5px);
@@ -370,39 +440,41 @@
       border-radius: var(--hi-radius, 4px);
       background: var(--s-cand-bg);
       color: var(--s-cand);
-      font-size: 20px;
+      font-size: var(--candidate-font-size, 20px);
       line-height: 1.2;
       white-space: nowrap;
     }
 
     .mac .cand {
-      gap: 4px;
-      padding: 8px 10px 9px;
+      gap: 3px;
+      padding: 6px 8px 7px;
       border-radius: 0;
-      font-size: 16px;
+      font-size: var(--candidate-font-size, 16px);
       line-height: 1;
       letter-spacing: 0;
     }
 
     .cand .label {
       color: var(--s-label);
+      font-size: var(--label-font-size, 0.78em);
       font-weight: 720;
+      opacity: var(--label-opacity, 0.72);
     }
 
     .mac .cand .label {
       color: var(--s-label);
-      font-weight: 560;
+      font-weight: 520;
     }
 
     .cand .comment {
       color: var(--s-comment);
-      font-size: 15px;
+      font-size: var(--comment-font-size, 15px);
       opacity: 0.9;
     }
 
     .mac .cand .comment {
       margin-left: 2px;
-      font-size: 13px;
+      font-size: var(--comment-font-size, 13px);
     }
 
     .cand.active {
@@ -410,8 +482,13 @@
       color: var(--s-hi-text);
     }
 
+    .mac .cand.active {
+      border-radius: var(--hi-radius, 5px);
+    }
+
     .cand.active .label {
       color: var(--s-hi-label);
+      opacity: var(--hi-label-opacity, 0.86);
     }
 
     .cand.active .comment {
@@ -431,6 +508,252 @@
       border: 1px solid rgba(0, 0, 0, 0.08);
       border-radius: 6px;
       background: var(--swatch);
+      cursor: pointer;
+    }
+
+    .swatch-tooltip {
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      max-width: min(280px, calc(100vw - 24px));
+      padding: 8px 10px;
+      border: 1px solid rgba(31, 36, 35, 0.16);
+      border-radius: 10px;
+      background: rgba(31, 36, 35, 0.94);
+      color: #ffffff;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.35;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, calc(-100% - 10px));
+      transition: opacity 120ms ease;
+      white-space: nowrap;
+    }
+
+    .swatch-tooltip.show {
+      opacity: 1;
+    }
+
+    .swatch-tooltip .tooltip-key {
+      display: block;
+      font-weight: 760;
+    }
+
+    .swatch-tooltip .tooltip-value {
+      display: block;
+      margin-top: 2px;
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    .guide-card {
+      grid-column: 1 / -1;
+    }
+
+    .guide-card .card-head {
+      align-items: center;
+    }
+
+    .guide-actions {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .guide-badge {
+      padding: 5px 9px;
+      border: 1px solid rgba(47, 141, 98, 0.28);
+      border-radius: 999px;
+      background: rgba(231, 243, 237, 0.84);
+      color: #23734d;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .guide-toggle {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      border: 1px solid rgba(190, 210, 200, 0.9);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #1f6f4b;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .guide-toggle:hover {
+      border-color: rgba(78, 151, 111, 0.82);
+      background: #e7f3ed;
+    }
+
+    .guide-card.is-collapsed .card-head {
+      border-bottom: 0;
+    }
+
+    .guide-body {
+      display: grid;
+      grid-template-columns: minmax(540px, 1fr) minmax(360px, 0.78fr);
+      gap: 16px;
+      padding: 16px;
+      background:
+        linear-gradient(135deg, rgba(43, 59, 53, 0.035) 25%, transparent 25%) 0 0 / 16px 16px,
+        linear-gradient(315deg, rgba(43, 59, 53, 0.035) 25%, transparent 25%) 0 0 / 16px 16px,
+        #eef3ef;
+    }
+
+    body.dark-canvas .guide-body {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%) 0 0 / 16px 16px,
+        linear-gradient(315deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%) 0 0 / 16px 16px,
+        #202524;
+    }
+
+    .guide-diagram,
+    .guide-map {
+      min-width: 0;
+      border: 1px solid rgba(207, 216, 212, 0.86);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.76);
+      box-shadow: 0 12px 28px rgba(32, 48, 41, 0.08);
+      backdrop-filter: blur(14px);
+    }
+
+    .guide-diagram {
+      padding: 16px;
+    }
+
+    .guide-canvas {
+      position: relative;
+      min-height: 348px;
+      padding: 28px 16px 22px;
+      overflow: hidden;
+    }
+
+    .guide-sample {
+      position: relative;
+      z-index: 2;
+      width: fit-content;
+      max-width: 100%;
+      margin: 118px auto 0;
+    }
+
+    .guide-callout {
+      position: absolute;
+      z-index: 3;
+      max-width: 168px;
+      padding: 8px 10px;
+      border: 1px solid color-mix(in srgb, var(--guide-color) 42%, white);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #202524;
+      box-shadow: 0 10px 22px rgba(32, 48, 41, 0.1);
+    }
+
+    .guide-callout strong {
+      display: block;
+      color: var(--guide-color);
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .guide-callout span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .guide-lines {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .guide-lines line,
+    .guide-lines path {
+      fill: none;
+      stroke: var(--guide-color);
+      stroke-linecap: round;
+      stroke-width: 2;
+      opacity: 0.68;
+    }
+
+    .guide-map {
+      padding: 14px;
+    }
+
+    .guide-map h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .guide-table {
+      display: grid;
+      gap: 8px;
+    }
+
+    .guide-row {
+      padding: 11px 12px;
+      border: 1px solid rgba(218, 226, 222, 0.8);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.68);
+    }
+
+    .guide-part {
+      color: #23483b;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .guide-keys {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 7px;
+      color: #18201e;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 10px;
+      line-height: 1.2;
+    }
+
+    .guide-keys code {
+      padding: 2px 5px;
+      border: 1px solid rgba(207, 216, 212, 0.8);
+      border-radius: 6px;
+      background: rgba(248, 251, 249, 0.82);
+      color: #31443d;
+    }
+
+    .guide-desc {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .guide-code {
+      min-height: 320px;
+      margin: 16px 0 0;
+      padding: 13px 14px;
+      overflow: auto;
+      border: 1px solid rgba(207, 216, 212, 0.82);
+      border-radius: 10px;
+      background: rgba(248, 251, 249, 0.86);
+      color: #31443d;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.55;
+      white-space: pre;
     }
 
     .notice {
@@ -473,7 +796,22 @@
 
       .toolbar {
         grid-template-columns: 1fr 1fr;
-        position: static;
+      }
+
+      .converter {
+        grid-template-columns: 1fr auto;
+      }
+
+      .color-result {
+        grid-column: 1 / -1;
+      }
+
+      .guide-body {
+        grid-template-columns: 1fr;
+      }
+
+      .guide-row {
+        display: block;
       }
     }
 
@@ -485,8 +823,30 @@
 
       .summary,
       .toolbar,
+      .converter,
       .grid {
         grid-template-columns: 1fr;
+      }
+
+      .color-picker {
+        width: 100%;
+      }
+
+      .guide-body {
+        padding: 10px;
+      }
+
+      .guide-canvas {
+        min-height: 390px;
+        padding-inline: 0;
+      }
+
+      .guide-sample {
+        margin-top: 132px;
+      }
+
+      .guide-callout {
+        max-width: 158px;
       }
     }
   </style>
@@ -505,36 +865,51 @@
       </section>
     </header>
 
-    <section class="toolbar" aria-label="controls">
-      <label class="control">
-        <span>搜索</span>
-        <input id="search" type="search" placeholder="主题名 / id / 作者">
-      </label>
-      <label class="control">
-        <span>输入</span>
-        <input id="preedit" type="text" value="uide">
-      </label>
-      <label class="control">
-        <span>候选</span>
-        <input id="candidateText" type="text" value="是的,使得,时的,似的,诗的,湿的">
-      </label>
-      <fieldset class="segmented" aria-label="platform">
-        <label><input type="radio" name="platform" value="mac" checked>macOS</label>
-        <label><input type="radio" name="platform" value="win">Windows</label>
-      </fieldset>
-      <label class="control toggle">
-        <input id="darkCanvas" type="checkbox">
-        <span>暗底</span>
-      </label>
-      <label class="control file">
-        <input id="fileInput" type="file" accept=".yaml,.yml,text/yaml,text/plain">
-        <span>载入 YAML</span>
-      </label>
+    <section class="controls-panel" aria-label="preview controls">
+      <div class="toolbar" aria-label="controls">
+        <label class="control">
+          <span>搜索</span>
+          <input id="search" type="search" placeholder="主题名 / id / 作者">
+        </label>
+        <label class="control">
+          <span>输入</span>
+          <input id="preedit" type="text" value="uide">
+        </label>
+        <label class="control">
+          <span>候选</span>
+          <input id="candidateText" type="text" value="是的,使得,时的,似的,诗的,湿的">
+        </label>
+        <fieldset class="segmented" aria-label="platform">
+          <label><input type="radio" name="platform" value="mac" checked>macOS</label>
+          <label><input type="radio" name="platform" value="win">Windows</label>
+        </fieldset>
+        <label class="control toggle">
+          <input id="darkCanvas" type="checkbox">
+          <span>暗底</span>
+        </label>
+        <label class="control file">
+          <input id="fileInput" type="file" accept=".yaml,.yml,text/yaml,text/plain">
+          <span>载入 YAML</span>
+        </label>
+      </div>
+
+      <div class="converter" aria-label="color converter">
+        <label class="control">
+          <span>颜色</span>
+          <input id="colorInput" type="text" value="#4FAE7B" placeholder="#4FAE7B / 0x7BAE4F">
+        </label>
+        <input id="colorPicker" class="color-picker" type="color" value="#4FAE7B" aria-label="choose color">
+        <div id="colorResult" class="color-result">
+          <button id="colorChip" class="color-chip" type="button" title="复制鼠须管颜色"></button>
+          <span id="colorOutput" class="color-output"></span>
+        </div>
+      </div>
     </section>
 
     <p id="notice" class="notice"></p>
     <section id="grid" class="grid" aria-live="polite"></section>
     <section id="empty" class="empty">没有匹配的主题。</section>
+    <div id="swatchTooltip" class="swatch-tooltip" role="tooltip" aria-hidden="true"></div>
   </main>
 
   <script>
@@ -543,6 +918,8 @@
       style: {},
       sourceName: "squirrel.yaml",
       platform: "mac",
+      guideOpen: false,
+      currentSquirrelColor: "",
     };
 
     const colorKeys = [
@@ -568,6 +945,7 @@
       grid: document.querySelector("#grid"),
       empty: document.querySelector("#empty"),
       notice: document.querySelector("#notice"),
+      swatchTooltip: document.querySelector("#swatchTooltip"),
       themeCount: document.querySelector("#themeCount"),
       currentLight: document.querySelector("#currentLight"),
       currentDark: document.querySelector("#currentDark"),
@@ -576,6 +954,11 @@
       candidateText: document.querySelector("#candidateText"),
       darkCanvas: document.querySelector("#darkCanvas"),
       fileInput: document.querySelector("#fileInput"),
+      colorInput: document.querySelector("#colorInput"),
+      colorPicker: document.querySelector("#colorPicker"),
+      colorResult: document.querySelector("#colorResult"),
+      colorChip: document.querySelector("#colorChip"),
+      colorOutput: document.querySelector("#colorOutput"),
       platformInputs: document.querySelectorAll("input[name='platform']"),
     };
 
@@ -672,6 +1055,105 @@
       return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
     }
 
+    function hexPair(n) {
+      return Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0").toUpperCase();
+    }
+
+    function parseCssHex(value) {
+      const text = String(value || "").trim();
+      const match = text.match(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/);
+      if (!match) return null;
+      let hex = match[1];
+      if (hex.length === 3 || hex.length === 4) {
+        hex = [...hex].map((ch) => ch + ch).join("");
+      }
+      return {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16),
+        a: hex.length === 8 ? parseInt(hex.slice(6, 8), 16) : null,
+      };
+    }
+
+    function parseSquirrelHex(value) {
+      const text = String(value || "").trim();
+      const match = text.match(/^0x([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/);
+      if (!match) return null;
+      const hex = match[1];
+      const alpha = hex.length === 8 ? parseInt(hex.slice(0, 2), 16) : null;
+      const bgr = hex.length === 8 ? hex.slice(2) : hex;
+      return {
+        r: parseInt(bgr.slice(4, 6), 16),
+        g: parseInt(bgr.slice(2, 4), 16),
+        b: parseInt(bgr.slice(0, 2), 16),
+        a: alpha,
+      };
+    }
+
+    function rgbaToCssHex(color, withAlpha = false) {
+      return `#${hexPair(color.r)}${hexPair(color.g)}${hexPair(color.b)}${withAlpha && color.a !== null ? hexPair(color.a) : ""}`;
+    }
+
+    function rgbaToSquirrel(color) {
+      const body = `${hexPair(color.b)}${hexPair(color.g)}${hexPair(color.r)}`;
+      return `0x${color.a === null ? "" : hexPair(color.a)}${body}`;
+    }
+
+    function updateColorConverter(source = "text") {
+      const raw = els.colorInput.value.trim();
+      const fromSquirrel = /^0x/i.test(raw);
+      const color = fromSquirrel ? parseSquirrelHex(raw) : parseCssHex(raw);
+      if (!color) {
+        state.currentSquirrelColor = "";
+        els.colorChip.style.setProperty("--chip", "transparent");
+        els.colorChip.disabled = true;
+        els.colorOutput.textContent = "输入 #RRGGBB / #RRGGBBAA / 0xBBGGRR / 0xAABBGGRR";
+        return;
+      }
+
+      const cssHex = rgbaToCssHex(color);
+      const cssHexAlpha = rgbaToCssHex(color, true);
+      const squirrelHex = rgbaToSquirrel(color);
+      state.currentSquirrelColor = squirrelHex;
+      els.colorChip.style.setProperty("--chip", cssHex);
+      els.colorChip.disabled = false;
+      els.colorChip.title = `复制 ${squirrelHex}`;
+      if (source !== "picker") els.colorPicker.value = cssHex;
+      els.colorOutput.innerHTML = fromSquirrel
+        ? `真实网页色 <code>${escapeHtml(color.a === null ? cssHex : cssHexAlpha)}</code>，鼠须管原值 <code>${escapeHtml(squirrelHex)}</code>`
+        : `鼠须管写 <code>${escapeHtml(squirrelHex)}</code>，网页色 <code>${escapeHtml(color.a === null ? cssHex : cssHexAlpha)}</code>`;
+    }
+
+    async function copyCurrentSquirrelColor() {
+      const value = state.currentSquirrelColor;
+      if (!value) return;
+      const previous = els.colorOutput.innerHTML;
+      const showCopied = () => {
+        els.colorOutput.innerHTML = `已复制 <code>${escapeHtml(value)}</code>`;
+        setTimeout(() => { els.colorOutput.innerHTML = previous; }, 900);
+      };
+      try {
+        if (!navigator.clipboard) throw new Error("clipboard unavailable");
+        await navigator.clipboard.writeText(value);
+        showCopied();
+      } catch (_) {
+        const temp = document.createElement("textarea");
+        temp.value = value;
+        temp.setAttribute("readonly", "");
+        temp.style.position = "fixed";
+        temp.style.left = "-9999px";
+        document.body.appendChild(temp);
+        temp.select();
+        const ok = document.execCommand("copy");
+        temp.remove();
+        if (ok) {
+          showCopied();
+        } else {
+          window.prompt("复制鼠须管颜色:", value);
+        }
+      }
+    }
+
     function effectiveConfig(theme) {
       return { ...state.style, ...theme.config };
     }
@@ -681,7 +1163,7 @@
       const mac = state.platform === "mac";
       const text = toRgba(cfg.text_color, mac ? "#1d1d1f" : "#222");
       const candidate = toRgba(cfg.candidate_text_color, text);
-      const label = toRgba(cfg.label_color, mac ? "rgba(109, 109, 114, 0.95)" : candidate);
+      const label = toRgba(cfg.candidate_label_color, toRgba(cfg.label_color, mac ? "rgba(109, 109, 114, 0.72)" : candidate));
       const comment = toRgba(cfg.comment_text_color, label);
       const hiBg = toRgba(cfg.hilited_candidate_back_color, toRgba(cfg.hilited_back_color, mac ? "rgba(222, 178, 222, 0.82)" : "#4b5563"));
       const hiText = toRgba(cfg.hilited_candidate_text_color, text);
@@ -689,14 +1171,19 @@
       const hiComment = toRgba(cfg.hilited_comment_text_color, hiText);
       const radius = parseNum(cfg.corner_radius, parseNum(state.style.corner_radius, mac ? 9 : 5));
       const hiRadius = parseNum(cfg.hilited_corner_radius, mac ? 0 : radius);
-      const borderWidth = Math.max(parseNum(cfg.border_width, 1), 1);
-      const outerX = Math.max(parseNum(cfg.border_width, 8), 4);
-      const outerY = Math.max(parseNum(cfg.border_height, 6), 4);
+      const rawBorderWidth = parseNum(cfg.border_width, mac ? 0 : 1);
+      const rawBorderHeight = parseNum(cfg.border_height, mac ? 0 : 6);
+      const borderWidth = mac ? 1 : Math.max(rawBorderWidth, 1);
+      const outerX = mac ? Math.max(rawBorderWidth, 0) : Math.max(rawBorderWidth, 4);
+      const outerY = mac ? Math.max(rawBorderHeight, rawBorderWidth > 0 ? 4 : 0) : Math.max(rawBorderHeight, 4);
       const spacing = Math.max(parseNum(cfg.spacing, 8), 3);
+      const fontSize = parseNum(cfg.font_point, parseNum(state.style.font_point, mac ? 16 : 18));
+      const labelFontSize = parseNum(cfg.label_font_point, Math.max(Math.round(fontSize * 0.78), 11));
+      const commentFontSize = parseNum(cfg.comment_font_point, Math.max(Math.round(fontSize * 0.82), 12));
 
       return [
         `--s-bg:${toRgba(cfg.back_color, mac ? "rgba(248, 248, 248, 0.86)" : "#fff")}`,
-        `--s-border:${toRgba(cfg.border_color, mac ? "rgba(0,0,0,.2)" : "rgba(0,0,0,.12)")}`,
+        `--s-border:${toRgba(cfg.border_color, mac ? "rgba(0,0,0,.18)" : "rgba(0,0,0,.12)")}`,
         `--s-text:${text}`,
         `--s-preedit-bg:${toRgba(cfg.preedit_back_color, "transparent")}`,
         `--s-cand:${candidate}`,
@@ -713,8 +1200,13 @@
         `--outer-x:${outerX}px`,
         `--outer-y:${outerY}px`,
         `--cand-gap:${spacing / 2}px`,
-        `--cand-pad-y:${Math.max(Math.round(spacing / 3), 4)}px`,
-        `--cand-pad-x:${Math.max(Math.round(spacing / 1.5), 7)}px`,
+        `--cand-pad-y:${mac ? 6 : Math.max(Math.round(spacing / 3), 4)}px`,
+        `--cand-pad-x:${mac ? 8 : Math.max(Math.round(spacing / 1.5), 7)}px`,
+        `--candidate-font-size:${fontSize}px`,
+        `--label-font-size:${labelFontSize}px`,
+        `--comment-font-size:${commentFontSize}px`,
+        `--label-opacity:${mac ? 0.72 : 1}`,
+        `--hi-label-opacity:${mac ? 0.88 : 1}`,
       ].join(";");
     }
 
@@ -723,7 +1215,7 @@
       return colorKeys
         .filter((key) => cfg[key])
         .slice(0, 8)
-        .map((key) => `<span class="swatch" title="${key}: ${cfg[key]}" style="--swatch:${toRgba(cfg[key], "#ddd")}"></span>`)
+        .map((key) => `<span class="swatch" data-swatch-key="${escapeHtml(key)}" data-swatch-value="${escapeHtml(cfg[key])}" aria-label="${escapeHtml(`${key}: ${cfg[key]}`)}" style="--swatch:${toRgba(cfg[key], "#ddd")}"></span>`)
         .join("");
     }
 
@@ -735,8 +1227,21 @@
       return `<div class="candidate-row${layout}">${words.map((word, index) => {
         const active = index === 0 ? " active" : "";
         const comment = sampleComments[index] ? `<span class="comment">${sampleComments[index]}</span>` : "";
-        return `<span class="cand${active}"><span class="label">${index + 1}.</span><span>${escapeHtml(word)}</span>${comment}</span>`;
+        return formatCandidate(cfg, index + 1, word, comment, active);
       }).join("")}</div>`;
+    }
+
+    function formatCandidate(cfg, label, word, comment, active) {
+      const format = cfg.candidate_format || "%c. %@";
+      const parts = format.match(/^(.*)%c(.*)%@(.*)$/);
+      if (!parts) {
+        return `<span class="cand${active}"><span class="label">${label}.</span><span>${escapeHtml(word)}</span>${comment}</span>`;
+      }
+
+      const beforeLabel = escapeHtml(parts[1]);
+      const between = escapeHtml(parts[2]);
+      const afterWord = escapeHtml(parts[3]);
+      return `<span class="cand${active}">${beforeLabel}<span class="label">${label}</span>${between}<span>${escapeHtml(word)}</span>${comment}${afterWord}</span>`;
     }
 
     function escapeHtml(text) {
@@ -786,6 +1291,202 @@
       `;
     }
 
+    const guideRows = [
+      {
+        part: "整体外壳",
+        keys: ["back_color", "border_color", "corner_radius"],
+        desc: "控制候选窗的底色、描边颜色和圆角。macOS 上还会叠加系统原生阴影和轻微透明感，所以预览与真实窗口会有一点平台差异。",
+      },
+      {
+        part: "横版排列",
+        keys: ["candidate_list_layout", "text_orientation", "candidate_format"],
+        desc: "决定候选是横着排还是竖着排，也决定数字、候选词和空白如何拼在一起。你现在想要微信式横排，核心就是线性横排。",
+      },
+      {
+        part: "输入码",
+        keys: ["inline_preedit", "text_color", "hilited_text_color", "preedit_back_color"],
+        desc: "决定 uide 这类未上屏编码显示在哪里。开启内嵌显示时，编码在输入框里；关闭时，编码会进入候选窗区域。",
+      },
+      {
+        part: "普通候选",
+        keys: ["candidate_text_color", "candidate_label_color", "label_color", "comment_text_color", "candidate_back_color"],
+        desc: "控制未选中候选的文字、序号和辅助码提示。截图里后面的候选字、灰色数字、辅助码小字都归这一组。",
+      },
+      {
+        part: "选中候选",
+        keys: ["hilited_candidate_back_color", "hilited_candidate_text_color", "hilited_candidate_label_color", "hilited_comment_text_color", "hilited_corner_radius"],
+        desc: "控制首选候选的高亮背景、文字、序号、辅助码提示和圆角。你最常看的第一候选，就是这一组决定观感。",
+      },
+      {
+        part: "字号",
+        keys: ["font_face", "font_point", "label_font_point", "comment_font_point"],
+        desc: "控制候选主文字、序号和辅助码提示的大小。实际数字偏小、半透明，通常就是序号字号和序号颜色共同作用。",
+      },
+      {
+        part: "外壳边距",
+        keys: ["border_width", "border_height", "margin_x", "margin_y"],
+        desc: "控制候选窗边缘到内容的留白。横排想更扁，优先看 border_height；margin_x / margin_y 在部分主题或版本里才明显。",
+      },
+      {
+        part: "候选间距",
+        keys: ["candidate_format", "candidate_spacing", "line_spacing", "hilite_spacing", "spacing"],
+        desc: "控制候选字之间和上下方向的呼吸感。横排里候选之间最直接的是 candidate_format 里的空格；候选条高度常被 line_spacing 和字号影响。",
+      },
+      {
+        part: "阴影",
+        keys: ["shadow_color", "candidate_shadow_color", "hilited_shadow_color", "hilited_candidate_shadow_color"],
+        desc: "控制主题层面的窗口或候选阴影。macOS 外层系统窗口阴影不一定完全受这些字段控制，真实表现以鼠须管为准。",
+      },
+    ];
+
+    function guideTheme() {
+      const preferred = state.style.color_scheme || state.style.color_scheme_dark;
+      return state.themes.find((theme) => theme.id === preferred) || state.themes[0] || { id: "theme", config: {} };
+    }
+
+    function valueForGuide(cfg, keys) {
+      return keys.map((key) => {
+        const value = cfg[key] ?? state.style[key];
+        return value ? `${key}: ${value}` : key;
+      }).join("\n");
+    }
+
+    function guideRow(row) {
+      const keys = row.keys?.length
+        ? `<div class="guide-keys">${row.keys.map((key) => `<code>${escapeHtml(key)}</code>`).join("")}</div>`
+        : "";
+      return `
+        <div class="guide-row">
+          <div class="guide-part">${escapeHtml(row.part)}</div>
+          ${keys}
+          <div class="guide-desc">${escapeHtml(row.desc)}</div>
+        </div>
+      `;
+    }
+
+    function yamlQuote(value) {
+      return `"${String(value ?? "").replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+    }
+
+    function themeValue(cfg, key, fallback) {
+      return cfg[key] ?? state.style[key] ?? fallback;
+    }
+
+    function guideConfigCode(theme, cfg, values) {
+      const themeName = cfg.name || theme.id;
+      const author = cfg.author || "your name";
+      return `# squirrel.custom.yaml 示例
+# 颜色顺序：网页 #RRGGBB -> 鼠须管 0xBBGGRR；带透明度为 0xAABBGGRR
+patch:
+  style/color_scheme: ${theme.id}                 # 浅色主题
+  style/color_scheme_dark: ${state.style.color_scheme_dark || theme.id}     # 深色主题
+  style/candidate_list_layout: ${values.layout}      # linear 横排；stacked 竖排
+  style/inline_preedit: ${themeValue(cfg, "inline_preedit", "true")}              # true: 编码显示在输入框
+  style/candidate_format: ${yamlQuote(values.format)}  # %c 是序号，%@ 是候选词
+  style/font_face: ${yamlQuote(themeValue(cfg, "font_face", "PingFang SC"))}      # 候选主字体，可用逗号写多个字体
+  style/font_point: ${values.font}                 # 候选主文字字号
+  style/label_font_point: ${values.label}          # 1/2/3 序号字号
+  style/comment_font_point: ${values.comment}      # 辅助码提示字号
+  style/corner_radius: ${themeValue(cfg, "corner_radius", "6")}             # 候选窗圆角
+  style/line_spacing: ${themeValue(cfg, "line_spacing", "0")}               # 行高/候选文字区域额外高度
+  style/spacing: ${themeValue(cfg, "spacing", "8")}                         # inline_preedit=false 时编码与候选距离
+  style/hilite_spacing: ${themeValue(cfg, "hilite_spacing", "6")}           # 高亮区域内部间距
+
+  preset_color_schemes/${theme.id}/name: ${yamlQuote(themeName)}
+  preset_color_schemes/${theme.id}/author: ${yamlQuote(author)}
+  preset_color_schemes/${theme.id}/back_color: ${themeValue(cfg, "back_color", "0xFFFFFF")}                 # 候选窗背景
+  preset_color_schemes/${theme.id}/border_color: ${themeValue(cfg, "border_color", "0xD0D0D0")}             # 边框颜色
+  preset_color_schemes/${theme.id}/border_width: ${themeValue(cfg, "border_width", "0")}                    # 左右外边距/边框厚度
+  preset_color_schemes/${theme.id}/border_height: ${themeValue(cfg, "border_height", "0")}                  # 上下外边距
+  preset_color_schemes/${theme.id}/text_color: ${themeValue(cfg, "text_color", "0x000000")}                 # 输入码文字
+  preset_color_schemes/${theme.id}/preedit_back_color: ${themeValue(cfg, "preedit_back_color", "0x00000000")} # 输入码背景
+  preset_color_schemes/${theme.id}/candidate_text_color: ${themeValue(cfg, "candidate_text_color", "0x000000")} # 普通候选
+  preset_color_schemes/${theme.id}/candidate_label_color: ${themeValue(cfg, "candidate_label_color", themeValue(cfg, "label_color", "0x808080"))} # 普通序号
+  preset_color_schemes/${theme.id}/comment_text_color: ${themeValue(cfg, "comment_text_color", "0x808080")} # 辅助码提示
+  preset_color_schemes/${theme.id}/hilited_candidate_back_color: ${themeValue(cfg, "hilited_candidate_back_color", "0x4FAE7B")} # 首选背景
+  preset_color_schemes/${theme.id}/hilited_candidate_text_color: ${themeValue(cfg, "hilited_candidate_text_color", "0xFFFFFF")} # 首选文字
+  preset_color_schemes/${theme.id}/hilited_candidate_label_color: ${themeValue(cfg, "hilited_candidate_label_color", "0xFFFFFF")} # 首选序号
+  preset_color_schemes/${theme.id}/hilited_comment_text_color: ${themeValue(cfg, "hilited_comment_text_color", "0xFFFFFF")} # 首选辅助码
+  preset_color_schemes/${theme.id}/hilited_corner_radius: ${themeValue(cfg, "hilited_corner_radius", themeValue(cfg, "corner_radius", "6"))} # 首选圆角
+  preset_color_schemes/${theme.id}/shadow_color: ${themeValue(cfg, "shadow_color", "0x00000000")} # 窗口阴影；macOS 系统阴影不一定完全受控
+  preset_color_schemes/${theme.id}/candidate_shadow_color: ${themeValue(cfg, "candidate_shadow_color", "0x00000000")} # 普通候选阴影
+  preset_color_schemes/${theme.id}/hilited_candidate_shadow_color: ${themeValue(cfg, "hilited_candidate_shadow_color", "0x00000000")} # 首选阴影`;
+    }
+
+    function attributeGuideCard() {
+      const theme = guideTheme();
+      const cfg = effectiveConfig(theme);
+      const name = cfg.name || theme.id;
+      const open = state.guideOpen;
+      const values = {
+        layout: cfg.candidate_list_layout || state.style.candidate_list_layout || "linear",
+        format: cfg.candidate_format || state.style.candidate_format || "%c. %@",
+        font: cfg.font_point || state.style.font_point || "14",
+        label: cfg.label_font_point || state.style.label_font_point || "自动",
+        comment: cfg.comment_font_point || state.style.comment_font_point || "自动",
+      };
+
+      return `
+        <article class="card guide-card${open ? "" : " is-collapsed"}" data-id="__guide">
+          <div class="card-head">
+            <div class="title">
+              <h2 class="theme-name">主题字段地图</h2>
+              <div class="theme-id">当前示例：${escapeHtml(theme.id)} ${escapeHtml(name)}</div>
+            </div>
+            <div class="guide-actions">
+              <span class="guide-badge">style + preset_color_schemes</span>
+              <button class="guide-toggle" data-toggle-guide aria-expanded="${open ? "true" : "false"}">${open ? "收起" : "展开"}</button>
+            </div>
+          </div>
+          ${open ? `
+          <div class="guide-body">
+            <section class="guide-diagram" aria-label="theme attribute map">
+              <div class="guide-canvas">
+                <svg class="guide-lines" viewBox="0 0 620 310" preserveAspectRatio="none" aria-hidden="true">
+                  <line style="--guide-color:#4FAE7B" x1="72" y1="44" x2="272" y2="158"></line>
+                  <line style="--guide-color:#B450A6" x1="500" y1="105" x2="382" y2="158"></line>
+                  <line style="--guide-color:#D2792A" x1="92" y1="258" x2="232" y2="186"></line>
+                  <line style="--guide-color:#2E7BB4" x1="500" y1="258" x2="430" y2="186"></line>
+                  <path style="--guide-color:#6F7774" d="M330 42 C332 78 334 118 334 158"></path>
+                </svg>
+                <div class="guide-callout" style="left:10px;top:8px;--guide-color:#4FAE7B">
+                  <strong>back / border</strong>
+                  <span>back_color, border_color, border_width, corner_radius</span>
+                </div>
+                <div class="guide-callout" style="right:10px;top:72px;--guide-color:#B450A6">
+                  <strong>candidate_format</strong>
+                  <span>%c 是数字，%@ 是候选词；横版用 linear</span>
+                </div>
+                <div class="guide-callout" style="left:18px;bottom:18px;--guide-color:#D2792A">
+                  <strong>hilited_candidate_*</strong>
+                  <span>首选的背景、文字、数字和辅助码颜色</span>
+                </div>
+                <div class="guide-callout" style="right:12px;bottom:18px;--guide-color:#2E7BB4">
+                  <strong>comment / label</strong>
+                  <span>辅助码提示和 1/2/3 数字的字号、颜色</span>
+                </div>
+                <div class="guide-callout" style="left:230px;top:8px;max-width:154px;--guide-color:#6F7774">
+                  <strong>font_point</strong>
+                  <span>候选主文字；label_font_point 控制数字大小</span>
+                </div>
+                <div class="guide-sample">
+                  ${previewMarkup(theme)}
+                </div>
+              </div>
+              <pre class="guide-code">${escapeHtml(guideConfigCode(theme, cfg, values))}</pre>
+            </section>
+            <section class="guide-map" aria-label="theme property description">
+              <h3>属性说明</h3>
+              <div class="guide-table">
+                ${guideRows.map((row) => guideRow(row)).join("")}
+              </div>
+            </section>
+          </div>
+          ` : ""}
+        </article>
+      `;
+    }
+
     function render() {
       const query = els.search.value.trim().toLowerCase();
       const themes = state.themes.filter((theme) => {
@@ -797,13 +1498,36 @@
       els.themeCount.textContent = String(state.themes.length);
       els.currentLight.textContent = state.style.color_scheme || "-";
       els.currentDark.textContent = state.style.color_scheme_dark || "-";
-      els.grid.innerHTML = themes.map(card).join("");
-      els.empty.classList.toggle("show", themes.length === 0);
+      els.grid.innerHTML = `${state.themes.length ? attributeGuideCard() : ""}${themes.map(card).join("")}`;
+      els.empty.classList.toggle("show", state.themes.length === 0 || themes.length === 0 && Boolean(query));
     }
 
     function showNotice(message) {
       els.notice.textContent = message;
       els.notice.classList.toggle("show", Boolean(message));
+    }
+
+    function moveSwatchTooltip(event) {
+      const tooltip = els.swatchTooltip;
+      const margin = 12;
+      const x = Math.min(Math.max(event.clientX, margin), window.innerWidth - margin);
+      const y = Math.min(Math.max(event.clientY, margin), window.innerHeight - margin);
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
+    }
+
+    function showSwatchTooltip(target, event) {
+      const key = target.dataset.swatchKey || "";
+      const value = target.dataset.swatchValue || "";
+      els.swatchTooltip.innerHTML = `<span class="tooltip-key">${escapeHtml(key)}</span><span class="tooltip-value">${escapeHtml(value)}</span>`;
+      els.swatchTooltip.setAttribute("aria-hidden", "false");
+      moveSwatchTooltip(event);
+      els.swatchTooltip.classList.add("show");
+    }
+
+    function hideSwatchTooltip() {
+      els.swatchTooltip.classList.remove("show");
+      els.swatchTooltip.setAttribute("aria-hidden", "true");
     }
 
     async function loadText(text, sourceName) {
@@ -845,6 +1569,14 @@
     els.search.addEventListener("input", render);
     els.preedit.addEventListener("input", render);
     els.candidateText.addEventListener("input", render);
+    els.colorInput.addEventListener("input", () => updateColorConverter("text"));
+    els.colorPicker.addEventListener("input", () => {
+      els.colorInput.value = els.colorPicker.value.toUpperCase();
+      updateColorConverter("picker");
+    });
+    els.colorResult.addEventListener("click", (event) => {
+      if (event.target.closest("#colorChip")) copyCurrentSquirrelColor();
+    });
     els.darkCanvas.addEventListener("change", () => {
       document.body.classList.toggle("dark-canvas", els.darkCanvas.checked);
     });
@@ -860,10 +1592,36 @@
       await loadText(await file.text(), file.name);
     });
     els.grid.addEventListener("click", (event) => {
+      const swatch = event.target.closest(".swatch");
+      if (swatch) {
+        els.colorInput.value = swatch.dataset.swatchValue || "";
+        updateColorConverter("swatch");
+        hideSwatchTooltip();
+        return;
+      }
+      const guideToggle = event.target.closest("[data-toggle-guide]");
+      if (guideToggle) {
+        state.guideOpen = !state.guideOpen;
+        render();
+        return;
+      }
       const button = event.target.closest("[data-copy]");
       if (button) copySnippet(button.dataset.copy, button);
     });
+    els.grid.addEventListener("mouseover", (event) => {
+      const swatch = event.target.closest(".swatch");
+      if (swatch) showSwatchTooltip(swatch, event);
+    });
+    els.grid.addEventListener("mousemove", (event) => {
+      if (event.target.closest(".swatch")) moveSwatchTooltip(event);
+    });
+    els.grid.addEventListener("mouseout", (event) => {
+      const swatch = event.target.closest(".swatch");
+      if (swatch && !swatch.contains(event.relatedTarget)) hideSwatchTooltip();
+    });
+    window.addEventListener("scroll", hideSwatchTooltip, { passive: true });
 
+    updateColorConverter();
     autoLoad();
   </script>
 </body>

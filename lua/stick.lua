@@ -7,6 +7,8 @@ function M.init(env)
     -- 初始化逻辑，加载固定词典等
     local config = env.engine.schema.config
     env.name_space = env.name_space:gsub("^*", "")
+    local enabled = config:get_bool(env.name_space .. "/enabled")
+    env.enabled = enabled ~= false
     env.fixed = {}
     M.count = config:get_int(env.name_space .. "/count") or 2  -- 获取配置中的 count 参数，默认值为 2
     M.idx = config:get_int(env.name_space .. "/idx") or 4  -- 获取配置中的 idx 参数，默认值为 4
@@ -54,6 +56,13 @@ local function create_candidate(text, comment)
 end
 
 function M.func(input, env)
+    if not env.enabled then
+        for cand in input:iter() do
+            yield(cand)
+        end
+        return
+    end
+
     local first_cand = nil
     local found = false
 

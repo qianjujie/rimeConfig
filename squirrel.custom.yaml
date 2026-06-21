@@ -5,3 +5,30 @@
 patch:
   # 候选排列：linear = 横排，stacked = 竖排
   style/candidate_list_layout: linear
+
+  # 微信主题：保持扁平。Squirrel 的 corner_radius 会参与最小高度计算，
+  # 外壳圆角调太大会把候选窗撑胖，所以这里不要追 macOS 原生的大胶囊圆角。
+  # corner_radius 控制整个白色候选窗；hilited_corner_radius 控制绿色首选块。
+  # line_spacing 会直接增加候选文字区域高度；横排想扁就要覆盖全局默认值。
+  # border_height 越小越扁；font_point / label_font_point 控制整体高度和数字大小。
+  # 字体按顺序 fallback；PingFang 负责日常观感，后面负责尽量兜底生僻字。
+  preset_color_schemes/wechat/font_face: "PingFang SC,Source Han Sans CN,BabelStone Han,HanaMinB,HanaMinA"
+  preset_color_schemes/wechat/corner_radius: 7
+  preset_color_schemes/wechat/hilited_corner_radius: 0
+  preset_color_schemes/wechat/border_height: -4
+  preset_color_schemes/wechat_dark/border_width: -3
+  preset_color_schemes/wechat/line_spacing: 0
+  preset_color_schemes/wechat/font_point: 14
+  preset_color_schemes/wechat/label_font_point: 10
+  preset_color_schemes/wechat/comment_font_point: 12
+
+  preset_color_schemes/wechat_dark/font_face: "PingFang SC,Source Han Sans CN,BabelStone Han,HanaMinB,HanaMinA"
+  preset_color_schemes/wechat_dark/corner_radius: 7
+  preset_color_schemes/wechat_dark/hilited_corner_radius: 0
+  preset_color_schemes/wechat_dark/border_height: -4
+  preset_color_schemes/wechat/border_width: -3
+  preset_color_schemes/wechat_dark/line_spacing: 0
+  preset_color_schemes/wechat_dark/font_point: 14
+  preset_color_schemes/wechat_dark/label_font_point: 10
+  preset_color_schemes/wechat_dark/comment_font_point: 12
+  preset_color_schemes/wechat_dark/shadow_color: 0x00000000

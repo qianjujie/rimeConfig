@@ -6,10 +6,11 @@ patch:
   #   再用表尾的「个人节奏首选」固定 ma/de/ui/le/uide/uima 等常用字词。
   custom_phrase/initial_quality: 100000
   custom_phrase_3_code/initial_quality: -1
+  stick/enabled: true
 
   # 次要：关掉整句语言模型，避免虚词被「句首合理性」降权，并去掉整句联想。
-  translator/contextual_suggestions: false
-  grammar/language: ""
+  # translator/contextual_suggestions: false
+  # grammar/language: ""
 
   # （可选）开启用户词库 / 自动调频：让它学习你的选择、自我修正。
   #   你之前想再想想，所以先注释着。想开就去掉下面行首的 #

@@ -9,8 +9,10 @@ sync/
 installation.yaml
 user.yaml
 
+# Private quick phrases: phone numbers, IDs, addresses, emails, etc.
+custom_phrase/private_phrase.txt
+
 # OS/editor noise
 .DS_Store
 *.swp
 *.swo
-

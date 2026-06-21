@@ -84,12 +84,14 @@ grammar/language: ""
 ```yaml
 custom_phrase/initial_quality: 100000
 custom_phrase_3_code/initial_quality: -1
+stick/enabled: true
 ```
 
 意思是：
 
 - 保留 `custom_phrase.txt`，用来固定我想要的首选
 - 压低 `custom_phrase_3_code`，减少作者预设短码污染候选
+- 保留 `stick` 简码回显，让 Tab 快捷词/提示区一直有内容可看
 
 ### 4. 清理会污染单字首选的短码
 
@@ -100,6 +102,7 @@ custom_phrase_3_code/initial_quality: -1
 # 得 de 2
 # 乐 le 2
 # 骂 ma 2
+# 握 wo 2
 ```
 
 避免：
@@ -109,6 +112,7 @@ ma -> 骂
 de -> 得
 ui -> 使
 le -> 乐
+wo -> 握
 ```
 
 这种破坏节奏的情况。
@@ -124,6 +128,7 @@ le -> 乐
 这里放我希望直接空格上屏的基础字和聊天短语，例如：
 
 ```text
+我    wo      100
 吗    ma      100
 的    de      100
 是    ui      100
@@ -135,6 +140,13 @@ le -> 乐
 收到  uzdc    100
 谢谢  xpxp    100
 ```
+
+目前这里分两层：
+
+- `100`：核心节奏首选。作者的一码常用字保留，同时补回完整双码，例如 `w -> 我` 和 `wo -> 我` 都可用。
+- `90`：高频双码单字补全。从作者注释掉的双码单字里，按字频先恢复一批高频字，例如 `对/年/中/上/等/都/会/到/为/来/说/好/没/呢/么`。
+
+这样做的目的不是追求极限简码，而是保证“两键一个字，空格上屏”的肌肉记忆。
 
 ## 日常怎么改
 
@@ -169,6 +181,49 @@ custom_phrase/custom_phrase.txt
 注意中间最好用 Tab，不要用空格。
 
 改完重新部署。
+
+### 增加私密快捷输入
+
+手机号、身份证、地址、邮箱、车架号这类不要写进会提交的 `custom_phrase.txt`。
+
+真实内容写到：
+
+```text
+custom_phrase/private_phrase.txt
+```
+
+这个文件已经在 `.gitignore` 里，不会提交到 GitHub。仓库里只保留模板：
+
+```text
+custom_phrase/private_phrase.example.txt
+```
+
+格式：
+
+```text
+内容<Tab>触发词<Tab>权重
+```
+
+例子：
+
+```text
+家庭地址示例	紫薇	100
+奥迪车辆信息示例	奥迪	100
+example@example.com	邮箱	100
+```
+
+这套机制主要用于中文触发词的 Tab 快捷输入：
+
+- 输入 `zi'ww` 后候选里出现“紫薇”时，Lua 过滤器会把“紫薇”置顶，并把对应地址显示在提示区。
+- 此时按空格仍然上屏“紫薇”，按 Tab 上屏提示区里的完整地址。
+- 输入 `aodi` 后候选里出现“奥迪”时，也会把车辆信息显示在“奥迪”的提示区，并可按 Tab 上屏。
+- 纯数字触发码使用 inline preedit 近似微信体验：精确匹配时显示快捷候选，空格/Tab 上屏快捷内容，回车上屏原始数字；继续输入数字会放弃快捷候选并提交原数字串。
+
+注意：
+
+- 第二列写“触发词”，中文触发建议写候选文本本身，例如 `紫薇`、`奥迪`，不是它们的双拼编码。
+- 第一列内容会自动去掉首尾空白，避免从别处复制时多带一个空格。
+- 修改 `private_phrase.txt` 后需要重新部署。
 
 ### 调整候选数量
 
@@ -278,6 +333,8 @@ http://127.0.0.1:8765/tools/squirrel-theme-preview.html
 页面会自动读取 `squirrel.yaml` 的 `preset_color_schemes` 并渲染所有主题样张。以后新增主题，刷新这个页面就能看到。
 
 如果直接双击打开 HTML，浏览器通常不能自动读取本地 `squirrel.yaml`，这时点页面里的“载入 YAML”，选择 `squirrel.yaml` 即可。
+
+注意：鼠须管颜色值不是 CSS/网页常见的 `#RRGGBB` 顺序，而是 `0xAABBGGRR` 这一类顺序。VSCode 的 Color Highlight 插件会按网页颜色理解 `0x...`，所以在 `squirrel.yaml` 里看到的色块可能是错的。本仓库通过 `.vscode/settings.json` 在 YAML 中关闭了该插件高亮，主题颜色以预览页为准。
 
 ## Git 同步规则
 
