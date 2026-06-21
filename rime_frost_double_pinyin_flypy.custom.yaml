@@ -4,3 +4,22 @@
 patch:
   # 默认显示候选字的墨奇辅助码和拆字信息，例如「你 rx 亻小」。
   switches/@7/reset: 1
+
+  # 过滤掉鼠须管字体渲染成「方框问号」的超大字集单字。
+  # 放在 emoji / 简繁 / 拆分提示之前，避免影响后续装饰类滤镜。
+  engine/filters:
+    - lua_filter@*is_in_user_dict
+    - lua_filter@*corrector
+    - reverse_lookup_filter@radical_reverse_lookup
+    - lua_filter@*autocap_filter
+    - lua_filter@*pin_cand_filter
+    - lua_filter@*reduce_english_filter
+    - lua_filter@*aux_lookup_filter
+    - lua_filter@*hide_unrenderable_filter
+    - simplifier@emoji
+    - simplifier@chaifen
+    - simplifier@chaifen_all
+    - simplifier@chinese_english
+    - simplifier@traditionalize
+    - simplifier@mars
+    - uniquifier
