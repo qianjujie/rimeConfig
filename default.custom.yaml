@@ -7,10 +7,12 @@
 
 patch:
   # ===== 启用的方案列表（整体替换 default.yaml 的 schema_list）=====
-  # 想启用更多墨奇方案，把对应行的 # 去掉即可。
+  # 当前主力：白霜小鹤双拼。它保留 ` 辅助码筛字，但日常输入按正常双拼词频走。
+  # 想回到墨奇测试，把下面对应行的 # 去掉并重新部署即可。
   schema_list:
-    - schema: moqi_wan_flypymo   # 墨奇·小鹤双拼 + 墨奇形（推荐）
-    - schema: moqi_wan_flypy     # 墨奇·小鹤双拼 + 鹤形
+    - schema: rime_frost_double_pinyin_flypy  # 白霜小鹤双拼 + ` 辅助码
+    # - schema: moqi_wan_flypymo   # 墨奇·小鹤双拼 + 墨奇形
+    # - schema: moqi_wan_flypy     # 墨奇·小鹤双拼 + 鹤形
     # - schema: moqi_single_xh     # 墨奇码·顶屏版·小鹤双拼（4码自动上屏，8000字）
     # - schema: moqi_wan_zrm             # 墨奇·自然码 + 自然码部首辅
     # - schema: moqi_wan_zrm_hx          # 墨奇·自然码 + 汉心码辅
