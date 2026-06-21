@@ -1,0 +1,6 @@
+# rime_frost_double_pinyin_flypy.custom.yaml
+# 白霜小鹤双拼个人补丁。改完重新部署生效。
+
+patch:
+  # 默认显示候选字的墨奇辅助码和拆字信息，例如「你 rx 亻小」。
+  switches/@7/reset: 1
