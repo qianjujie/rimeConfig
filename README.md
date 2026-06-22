@@ -99,7 +99,7 @@ enable_completion: false
 
 `easy_en_prefix.dict.yaml` 从 `easy_en.dict.yaml` 抽取高频单词，并把 4 到 8 位前缀展开成精确码表。例如词条 `english` 会生成 `engl/engli/englis/english -> english`。
 
-当前折中是：只在连续英文达到 4 位后再触发英文候选，例如 `main -> main`、`engli -> english`，并把英文候选质量设为 `5000`，低于主中文翻译器，避免污染 `ma/de/ui/ni` 这类短双拼输入。英文和中文编码不可能完全不碰撞，但较长英文才触发、且不抢中文首选，日常干扰会小很多。
+当前折中是：只在连续英文达到 4 位后再触发英文候选，例如 `main -> main`、`engli -> english`，并把英文候选质量设为 `10001`，让明显英文输入进入第一页。英文和中文编码不可能完全不碰撞，但较长英文才触发，日常干扰会小很多。
 
 这样既保留 `engli -> english` 这类体验，又避免 `nihca` 这种正常双拼长码触发大词库的“找不到前缀”慢查询。
 

@@ -361,7 +361,7 @@ guide:
     dictionary: easy_en_prefix
     enable_completion: false
     enable_sentence: false
-    initial_quality: 5000
+    initial_quality: 10001
     # suffix: "'"
     tips: "英文"
     spelling_hints: 9
