@@ -36,7 +36,7 @@ __include: moqi.yaml:/punctuator # 标点
 __include: moqi.yaml:/guide # 引导前缀配置
 
 speller:
-  max_code_length: 5
+  max_code_length: 20
   # table_translator翻译器，支持自动上屏。例如 “zmhu”可以自动上屏“怎么回事”
   auto_select: false
   auto_select_pattern: ^[a-z]+/|^[a-df-zA-DF-Z]\w{3}|^e\w{4}|;[a-z]
