@@ -90,11 +90,18 @@ Emoji 开关默认开启：
 easy_en_simp: "^[A-Za-z]{4,}$"
 ```
 
-原因是 `easy_en.dict.yaml` 词库很大，`aw` 前缀一触发就会开始补全，容易卡顿；而且它只适合输入单个英文单词，不是自然的中英混排。
+混输候选不直接使用 74 万行的 `easy_en.dict.yaml` 做动态补全，而是使用本地生成的小前缀表：
+
+```yaml
+dictionary: easy_en_prefix
+enable_completion: false
+```
+
+`easy_en_prefix.dict.yaml` 从 `easy_en.dict.yaml` 抽取高频单词，并把 4 到 8 位前缀展开成精确码表。例如词条 `english` 会生成 `engl/engli/englis/english -> english`。
 
 当前折中是：只在连续英文达到 4 位后再触发英文候选，例如 `main -> main`、`engli -> english`，并把英文候选质量设为 `5000`，低于主中文翻译器，避免污染 `ma/de/ui/ni` 这类短双拼输入。英文和中文编码不可能完全不碰撞，但较长英文才触发、且不抢中文首选，日常干扰会小很多。
 
-为避免正常双拼长码触发 74 万行英文词库的前缀补全，英文翻译器关闭了 `enable_completion`。因此 `main/cursor/react/english` 这类完整英文可以出候选，`engli -> english` 这种前缀补全暂不启用。
+这样既保留 `engli -> english` 这类体验，又避免 `nihca` 这种正常双拼长码触发大词库的“找不到前缀”慢查询。
 
 ## 我改了什么
 

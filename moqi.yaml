@@ -358,7 +358,7 @@ guide:
 
   easy_en_simp:
     tag: easy_en_simp
-    dictionary: easy_en
+    dictionary: easy_en_prefix
     enable_completion: false
     enable_sentence: false
     initial_quality: 5000
