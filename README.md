@@ -49,6 +49,51 @@ schema_list:
 
 想启用/隐藏方案，改 `default.custom.yaml` 里的 `schema_list`，然后重新部署。
 
+## 当前输入体验状态
+
+### 字集
+
+主词典入口是：
+
+```text
+moqi_wan.extended.dict.yaml
+```
+
+当前只启用日常小字集：
+
+```yaml
+- cn_dicts/8105
+# - cn_dicts/41448
+```
+
+这样做是为了减少四万字大字集里的扩展字和生僻字进入日常候选，避免鼠须管候选框里出现字体无法显示的 `?`。如果以后确实需要古籍、人名、地名等大字集场景，再打开 `cn_dicts/41448`，并确认候选框字体能覆盖扩展汉字。
+
+### Emoji
+
+Emoji 开关默认开启：
+
+```yaml
+- name: emoji
+  reset: 1
+  states: [ 💀, 😄 ]
+```
+
+中文候选会经过 `opencc/emoji.txt` 映射，例如“微笑”可以带出对应 emoji。也保留 `ae` 前缀的 emoji 表输入方式。
+
+### 英文
+
+主方案里暂时关闭了 `aw` 英文单词入口：
+
+```yaml
+# - affix_segmentor@easy_en_simp
+# - table_translator@easy_en_simp
+# easy_en_simp: "^aw[a-z]*"
+```
+
+原因是 `easy_en.dict.yaml` 词库很大，`aw` 前缀一触发就会开始补全，容易卡顿；而且它只适合输入单个英文单词，不是自然的中英混排。
+
+更适合当前双拼节奏的方向是：只在连续英文达到一定长度后再触发英文候选，例如 `engli -> english`，并把英文候选放在中文候选之后，避免污染 `ma/de/ui/ni` 这类短双拼输入。
+
 ## 我改了什么
 
 ### 1. 让 custom 补丁真正生效
