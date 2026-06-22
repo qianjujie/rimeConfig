@@ -7,11 +7,10 @@
 
 patch:
   # ===== 启用的方案列表（整体替换 default.yaml 的 schema_list）=====
-  # 当前主力：墨奇小鹤双拼 + 墨奇形。白霜保留在本地，先不启用。
+  # 想启用更多墨奇方案，把对应行的 # 去掉即可。
   schema_list:
-    - schema: moqi_wan_flypymo   # 墨奇·小鹤双拼 + 墨奇形
-    # - schema: moqi_wan_flypy     # 墨奇·小鹤双拼 + 鹤形
-    # - schema: rime_frost_double_pinyin_flypy  # 白霜小鹤双拼 + ` 辅助码
+    - schema: moqi_wan_flypymo   # 墨奇·小鹤双拼 + 墨奇形（推荐）
+    - schema: moqi_wan_flypy     # 墨奇·小鹤双拼 + 鹤形
     # - schema: moqi_single_xh     # 墨奇码·顶屏版·小鹤双拼（4码自动上屏，8000字）
     # - schema: moqi_wan_zrm             # 墨奇·自然码 + 自然码部首辅
     # - schema: moqi_wan_zrm_hx          # 墨奇·自然码 + 汉心码辅
@@ -27,16 +26,6 @@ patch:
   switcher/hotkeys:
     - Control+grave
     - Control+Shift+grave
-  switcher/save_options:
-    - ascii_mode
-    - full_shape
-    - traditionalization
-    - chinese_english
-    - emoji
-    - chaifen
-    - mars
-    - ascii_punct
-    - pin_cand
 
   # ===== 候选词个数 =====
   menu/page_size: 6            # 一页显示几个候选；想多看几个可改成 9

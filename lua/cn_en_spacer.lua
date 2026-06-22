@@ -1,6 +1,3 @@
--- 中英混输词条自动空格
--- 在 engine/filters 增加 - lua_filter@cn_en_spacer
---
 -- 为中英混输词条（cn_en.dict.yaml）自动空格
 -- 示例：`VIP中P` → `VIP 中 P`
 --
@@ -21,11 +18,10 @@ end
 
 local function cn_en_spacer(input, env)
     for cand in input:iter() do
-        local finalCand = cand  -- 创建新变量
         if is_mixed_cn_en_num(cand.text) then
-            finalCand = cand:to_shadow_candidate(cand.type, add_spaces(cand.text), cand.comment)
+            cand = cand:to_shadow_candidate(cand.type, add_spaces(cand.text), cand.comment)
         end
-        yield(finalCand)
+        yield(cand)
     end
 end
 

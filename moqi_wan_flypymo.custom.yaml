@@ -8,25 +8,6 @@ patch:
   custom_phrase_3_code/initial_quality: -1
   stick/enabled: true
 
-  # 只隐藏鼠须管/当前字体容易显示成「?」的超大字集单字，不启用
-  # enable_charset_filter；那个开关会误伤「nihc -> 你好」这类双拼词组。
-  engine/filters:
-    - lua_filter@*pro_comment_format
-    - lua_filter@*aux_lookup_filter
-    - lua_filter@*hide_unrenderable_filter
-    - lua_filter@*stick
-    - lua_filter@*is_in_user_dict
-    - lua_filter@*moqi.jianma_show
-    - reverse_lookup_filter@reverse_lookup
-    - simplifier@emoji
-    - simplifier@chaifen
-    - simplifier@chaifen_all
-    - simplifier@chinese_english
-    - simplifier@traditionalize
-    - simplifier@mars
-    - uniquifier
-    - lua_filter@*private_phrase.filter
-
   # 次要：关掉整句语言模型，避免虚词被「句首合理性」降权，并去掉整句联想。
   # translator/contextual_suggestions: false
   # grammar/language: ""
