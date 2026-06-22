@@ -353,7 +353,9 @@ guide:
     tips: " Emoji"
 
   english_prefix:
-    dictionary: easy_en_prefix
+    dictionary: ""
+    user_dict: custom_phrase/english_prefix
+    db_class: stabledb
     enable_completion: false
     enable_sentence: false
     initial_quality: 10001

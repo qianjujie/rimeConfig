@@ -1,16 +1,5 @@
-# Rime dictionary
-# encoding: utf-8
-# Derived from easy_en.dict.yaml for fast mixed English prefix candidates.
-# Keep only common single words and expand 4-8 letter prefixes as exact codes.
-# Longer completions are penalized so a prefix prefers the shortest natural word.
-
----
-name: easy_en_prefix
-version: "2026-06-22"
-sort: by_weight
-use_preset_vocabulary: false
-...
-
+## 高频英文前缀候选，生成自 easy_en.dict.yaml
+## 格式：候选文本<Tab>输入码<Tab>权重
 aachen	aach	962679
 aachen	aache	967679
 aachen	aachen	972679
@@ -96264,3 +96253,36 @@ zydeco	zydeco	970058
 zygote	zygo	958409
 zygote	zygot	963409
 zygote	zygote	968409
+
+## 开发常用英文补全覆盖
+github	git	1200000
+github	gith	1195000
+github	githu	1190000
+github	github	1185000
+GitHub	git	1190000
+GitHub	gith	1185000
+GitHub	githu	1180000
+GitHub	github	1175000
+javascript	java	1160000
+javascript	javas	1155000
+javascript	javasc	1150000
+javascript	javascr	1145000
+typescript	type	1160000
+typescript	types	1155000
+typescript	typesc	1150000
+typescript	typescr	1145000
+python	pyth	1160000
+python	pytho	1155000
+python	python	1150000
+docker	dock	1160000
+docker	docke	1155000
+docker	docker	1150000
+kubernetes	kube	1160000
+kubernetes	kuber	1155000
+kubernetes	kubern	1150000
+openai	open	1160000
+openai	opena	1155000
+openai	openai	1150000
+chatgpt	chat	1160000
+chatgpt	chatg	1155000
+chatgpt	chatgp	1150000

@@ -26,7 +26,6 @@ schema:
     - zrlf
     - emoji
     - easy_en
-    - easy_en_prefix
     - jp_sela
 
 __include: moqi.yaml:/switches_engine

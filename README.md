@@ -91,12 +91,16 @@ Emoji 开关默认开启：
 混输候选不直接使用 74 万行的 `easy_en.dict.yaml` 做动态补全，而是使用本地生成的小前缀表：
 
 ```yaml
-dictionary: easy_en_prefix
+dictionary: ""
+user_dict: custom_phrase/english_prefix
+db_class: stabledb
 enable_completion: false
 enable_sentence: false
 ```
 
-`easy_en_prefix.dict.yaml` 从 `easy_en.dict.yaml` 抽取高频单词，并把 4 到 8 位前缀展开成精确码表。例如词条 `english` 会生成 `engl/engli/englis/english -> english`。
+`custom_phrase/english_prefix.txt` 从 `easy_en.dict.yaml` 抽取高频单词，并把 4 到 8 位前缀展开成精确码表。例如词条 `english` 会生成 `engl/engli/englis/english -> english`。
+
+文件末尾有一小段开发常用英文覆盖，例如 `git -> github/GitHub`，用于补齐原英文词频表里缺失但日常高频的技术词。
 
 当前折中是：只在连续英文达到 4 位后再触发英文候选，例如 `main -> main`、`engli -> english`，并把英文候选质量设为 `10001`，让明显英文输入进入第一页。英文和中文编码不可能完全不碰撞，但较长英文才触发，日常干扰会小很多。
 
