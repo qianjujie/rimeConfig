@@ -358,7 +358,7 @@ guide:
     db_class: stabledb
     enable_completion: false
     enable_sentence: false
-    initial_quality: 10001
+    initial_quality: 9000
     tips: "英文"
     spelling_hints: 9
     comment_format:
