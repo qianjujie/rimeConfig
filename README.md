@@ -82,17 +82,17 @@ Emoji 开关默认开启：
 
 ### 英文
 
-主方案里暂时关闭了 `aw` 英文单词入口：
+主方案不再使用 `aw` 英文单词入口，而是改为 5 位及以上纯英文字母触发：
 
 ```yaml
-# - affix_segmentor@easy_en_simp
-# - table_translator@easy_en_simp
-# easy_en_simp: "^aw[a-z]*"
+- affix_segmentor@easy_en_simp
+- table_translator@easy_en_simp
+easy_en_simp: "^[A-Za-z]{5,}$"
 ```
 
 原因是 `easy_en.dict.yaml` 词库很大，`aw` 前缀一触发就会开始补全，容易卡顿；而且它只适合输入单个英文单词，不是自然的中英混排。
 
-更适合当前双拼节奏的方向是：只在连续英文达到一定长度后再触发英文候选，例如 `engli -> english`，并把英文候选放在中文候选之后，避免污染 `ma/de/ui/ni` 这类短双拼输入。
+当前折中是：只在连续英文达到 5 位后再触发英文候选，例如 `engli -> english`，并把英文候选质量设为 `5000`，低于主中文翻译器，避免污染 `ma/de/ui/ni` 这类短双拼输入。英文和中文编码不可能完全不碰撞，但长串英文才触发、且不抢中文首选，日常干扰会小很多。
 
 ## 我改了什么
 
