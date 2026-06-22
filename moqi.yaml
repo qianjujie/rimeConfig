@@ -68,6 +68,7 @@ switches_engine:
       - table_translator@custom_phrase_super_3jian_no_conflict
       - table_translator@custom_phrase_super_4jian_no_conflict
       - table_translator@emojis ## 添加注释后：停用ae模式emoji输入
+      - table_translator@english_prefix ## 高频英文前缀补全；不参与中文整句组词
       - table_translator@jp_sela ## 添加注释后：停用日语输入
       # 反查翻译器
       - reverse_lookup_translator
@@ -351,13 +352,11 @@ guide:
     #suffix: "'"
     tips: " Emoji"
 
-  easy_en_simp:
-    tag: easy_en_simp
+  english_prefix:
     dictionary: easy_en_prefix
     enable_completion: false
     enable_sentence: false
     initial_quality: 10001
-    # suffix: "'"
     tips: "英文"
     spelling_hints: 9
     comment_format:

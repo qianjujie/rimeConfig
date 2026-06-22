@@ -82,11 +82,10 @@ Emoji 开关默认开启：
 
 ### 英文
 
-主方案不再使用 `aw` 英文单词入口，而是把英文前缀表直接导入主词典：
+主方案不再使用 `aw` 英文单词入口，而是单独挂一个英文前缀翻译器：
 
 ```yaml
-import_tables:
-  - easy_en_prefix
+- table_translator@english_prefix
 ```
 
 混输候选不直接使用 74 万行的 `easy_en.dict.yaml` 做动态补全，而是使用本地生成的小前缀表：
@@ -94,13 +93,14 @@ import_tables:
 ```yaml
 dictionary: easy_en_prefix
 enable_completion: false
+enable_sentence: false
 ```
 
 `easy_en_prefix.dict.yaml` 从 `easy_en.dict.yaml` 抽取高频单词，并把 4 到 8 位前缀展开成精确码表。例如词条 `english` 会生成 `engl/engli/englis/english -> english`。
 
 当前折中是：只在连续英文达到 4 位后再触发英文候选，例如 `main -> main`、`engli -> english`，并把英文候选质量设为 `10001`，让明显英文输入进入第一页。英文和中文编码不可能完全不碰撞，但较长英文才触发，日常干扰会小很多。
 
-这样既保留 `engli -> english` 这类体验，又避免 `nihca` 这种正常双拼长码触发大词库的“找不到前缀”慢查询。
+这样既保留 `engli -> english` 这类体验，又避免 `nihca` 这种正常双拼长码触发大词库的“找不到前缀”慢查询。英文翻译器不参与中文整句组词，所以不会把 `hove bu lw ma` 拼成 `hover不累吗`。
 
 ## 我改了什么
 
