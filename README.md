@@ -82,12 +82,11 @@ Emoji 开关默认开启：
 
 ### 英文
 
-主方案不再使用 `aw` 英文单词入口，而是改为 4 位及以上纯英文字母触发：
+主方案不再使用 `aw` 英文单词入口，而是把英文前缀表直接导入主词典：
 
 ```yaml
-- affix_segmentor@easy_en_simp
-- table_translator@easy_en_simp
-easy_en_simp: "^[A-Za-z]{4,}$"
+import_tables:
+  - easy_en_prefix
 ```
 
 混输候选不直接使用 74 万行的 `easy_en.dict.yaml` 做动态补全，而是使用本地生成的小前缀表：

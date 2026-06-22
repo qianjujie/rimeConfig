@@ -29,6 +29,7 @@ import_tables:
   # - cn_dicts_common/chengyu   # 成语
   - cn_dicts_common/changcijian   # 多字
   - cn_dicts_common/changcijian3   # 3字
+  - easy_en_prefix                 # 高频英文前缀补全，避免无前缀 affix_segmentor 不进候选流
 
   # 细胞词库
   - cn_dicts_cell/medication
