@@ -7,6 +7,7 @@ switches_engine:
     - name: traditionalization
       states: [ 简, 繁 ]
     - name: emoji
+      reset: 1
       states: [ 💀, 😄 ]
     - name: chaifen
       states: [ 不拆, 扌斥 ]
@@ -44,7 +45,9 @@ switches_engine:
 
       - affix_segmentor@add_user_dict
       - affix_segmentor@verbatim ## not as the last of this list
-      - affix_segmentor@easy_en_simp
+      # easy_en_simp uses a very large English dictionary and can lag after the aw prefix.
+      # Keep it disabled in the mixed Chinese scheme; use ascii_mode for English text.
+      # - affix_segmentor@easy_en_simp
       - affix_segmentor@jp_sela
       - fallback_segmentor
     translators:
@@ -68,7 +71,7 @@ switches_engine:
       - table_translator@custom_phrase_super_3jian_no_conflict
       - table_translator@custom_phrase_super_4jian_no_conflict
       - table_translator@emojis ## 添加注释后：停用ae模式emoji输入
-      - table_translator@easy_en_simp ## 添加注释后：停用单词输入
+      # - table_translator@easy_en_simp ## 添加注释后：停用单词输入
       - table_translator@jp_sela ## 添加注释后：停用日语输入
       # 反查翻译器
       - reverse_lookup_translator
@@ -338,7 +341,7 @@ guide:
       add_user_dict: "^ac[A-Za-z]*$"
 
       emojis: "^ae[a-z]*'?$" # "^ae.*$" 
-      easy_en_simp: "^aw[a-z]*"
+      # easy_en_simp: "^aw[a-z]*"
       jp_sela: "^aj[a-z]*"
       card_number: "^C[0-9]+"              # 脚本将自动获取第 2 个字符 C 作为触发前缀
       unicode: "^U[a-f0-9]+"              # 脚本将自动获取第 2 个字符 U 作为触发前缀，响应 lua_translator@unicode，输出 Unicode 字符
