@@ -38,7 +38,7 @@ style:
 
   # 默認界面設置 (會被具體主題覆寫)
   font_point: 14
-  font_face: "LXGW WenKai,HanaMinA,HanaMinB,PingFang SC"
+  font_face: "LXGW WenKai,HanaMinA,HanaMinB,PingFang SC,Source Han Sans CN Regular"
   corner_radius: 5
   # hilited_corner_radius: 5
   line_spacing: 8
