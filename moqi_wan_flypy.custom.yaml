@@ -5,10 +5,40 @@ patch:
   # ★ 节奏首选：保留 custom_phrase 机制，但在表内注释掉作者会污染单字的短码，
   #   再用表尾的「个人节奏首选」固定 ma/de/ui/le/uide/uima 等常用字词。
   custom_phrase/initial_quality: 100000
-  custom_phrase/enable_completion: true
+  # custom_phrase 补全会把长词前缀和原始辅助码注释翻出来，保持关闭。
+  custom_phrase/enable_completion: false
   custom_phrase_3_code/initial_quality: -1
   stick/enabled: true
+  # 保留主词库补全；长原始辅助码注释由 lua/pro_comment_format.lua 清理。
   translator/enable_completion: true
+
+  # 不使用作者的超级简拼长词：bzd->不知道、lqbz->乱七八糟 这类会打断双码节奏。
+  # 这里重写翻译器列表，保留普通词库、个人短语、快符、emoji、英文、反查和辅助码。
+  engine/translators:
+    - lua_translator@*date_translator
+    - lua_translator@*lunar
+    - lua_translator@*unicode
+    - lua_translator@*card_number
+    - lua_translator@*number_translator
+    - lua_translator@*private_phrase.translator
+    - lua_translator@*calculator
+    - punct_translator
+    - table_translator@custom_phrase
+    - table_translator@custom_phrase_3_code
+    - table_translator@custom_phrase_kf
+    - table_translator@custom_phrase_mqzg
+    - table_translator@emojis
+    - table_translator@english_prefix
+    - table_translator@jp_sela
+    - reverse_lookup_translator
+    - table_translator@reverse_moqima
+    - table_translator@radical_flypy
+    - table_translator@reverse_stroke
+    - table_translator@reverse_zrlf
+    - table_translator@reverse_cj
+    - script_translator
+    - script_translator@user_dict_set
+    - script_translator@add_user_dict
 
   # 次要：关掉整句语言模型，避免虚词被「句首合理性」降权，并去掉整句联想。
   translator/contextual_suggestions: false

@@ -228,6 +228,23 @@ end
 -- 主函数：根据优先级处理候选词的注释
 -- #########################
 local C = {}
+
+local function is_raw_aux_comment(comment)
+    if not comment or comment == "" then
+        return false
+    end
+
+    local semicolon_count = 0
+    for _ in comment:gmatch(";") do
+        semicolon_count = semicolon_count + 1
+        if semicolon_count >= 6 then
+            return comment:match("%a+;") ~= nil
+        end
+    end
+
+    return false
+end
+
 function C.init(env)
     local config = env.engine.schema.config
 
@@ -261,6 +278,9 @@ function C.func(input, env)
         -- 遍历输入的候选词
         for cand in input:iter() do
             if cand.type == 'completion' then
+                if is_raw_aux_comment(cand.comment) then
+                    cand:get_genuine().comment = ""
+                end
                 yield(cand)
                 goto continue
             end
