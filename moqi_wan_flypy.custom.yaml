@@ -24,6 +24,7 @@ patch:
     - lua_translator@*calculator
     - punct_translator
     - table_translator@custom_phrase
+    - table_translator@custom_phrase_biaodian
     - table_translator@custom_phrase_3_code
     - table_translator@custom_phrase_kf
     - table_translator@custom_phrase_mqzg

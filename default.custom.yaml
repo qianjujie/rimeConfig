@@ -21,10 +21,10 @@ patch:
     # - schema: moqi_wan_quanpin_moqi    # 墨奇·全拼 + 墨奇形
     # - schema: moqi_wan_abc_mo          # 墨奇·智能ABC双拼 + 墨奇形
 
-  # ===== 方案选单（Control+` 呼出）=====
+  # ===== 方案选单（F4 呼出；停用 Control+`，避免和编辑器终端快捷键冲突）=====
   switcher/caption: 〔方案選單〕
   switcher/hotkeys:
-    - Control+grave
+    - F4
     - Control+Shift+grave
 
   # ===== 候选词个数 =====
