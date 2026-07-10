@@ -69,11 +69,9 @@
 []	vsko	100
 【】	zkh	100
 【】	vskohc	100
-<>	jk	100
 <>	jmko	100
 《》	jkh	100
 《》	jmkohc	100
-“”	yh	100
 “”	ybhc	100
 ‘’	dy	100
 ‘’	dyyh	100

@@ -143,14 +143,14 @@ phrase:
     enable_sentence: false
     initial_quality: 100000
 
-  # 标点短码：低于主词库，尽量让正常字词第一、符号第二。
+  # 标点短码：与系统同码词冲突时居后，避免抢占第一候选。
   custom_phrase_biaodian:
     dictionary: ""
     user_dict: custom_phrase/custom_phrase_biaodian
     db_class: stabledb
     enable_sentence: false
     enable_completion: false
-    initial_quality: 9999
+    initial_quality: -1
 
   # 无冲突的3简
   custom_phrase_super_3jian_no_conflict:
