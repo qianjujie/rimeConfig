@@ -1,0 +1,92 @@
+# Only the phonetic Xiaohe layout. No auxiliary codes, reverse lookup or Lua plugins.
+schema:
+  schema_id: learning_flypy
+  name: 白霜拼音·小鹤双拼
+  version: "2.7"
+switches:
+  - {name: ascii_mode, reset: 0, states: [中文, 英文]}
+engine:
+  processors: [ascii_composer, key_binder, speller, punctuator, selector, navigator, express_editor]
+  segmentors: [ascii_segmentor, abc_segmentor, punct_segmentor, fallback_segmentor]
+  translators: [punct_translator, table_translator@preferred, script_translator]
+  filters: [uniquifier]
+speller:
+  alphabet: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+  delimiter: " '"
+  algebra:
+    - derive/^([jqxy])u(;.*)$/$1v$2/
+    - derive/^([aoe])([ioun])(;.*)$/$1$1$2$3/
+    - xform/^([aoe])(ng)?(;.*)$/$1$1$2$3/
+    - xform/^(\w+?)iu(;.*)/$1Ⓠ$2/
+    - xform/^(\w+?)ei(;.*)/$1Ⓦ$2/
+    - xform/^(\w+?)uan(;.*)/$1Ⓡ$2/
+    - xform/^(\w+?)[uv]e(;.*)/$1Ⓣ$2/
+    - xform/^(\w+?)un(;.*)/$1Ⓨ$2/
+    - xform/^(\w+?)uo(;.*)/$1Ⓞ$2/
+    - xform/^(\w+?)ie(;.*)/$1Ⓟ$2/
+    - xform/^(\w+?)i?ong(;.*)/$1Ⓢ$2/
+    - xform/^(\w+?)ing(;.*)/$1Ⓚ$2/
+    - xform/^(\w+?)uai(;.*)/$1Ⓚ$2/
+    - xform/^(\w+?)ai(;.*)/$1Ⓓ$2/
+    - xform/^(\w+?)eng(;.*)/$1Ⓖ$2/
+    - xform/^(\w+?)en(;.*)/$1Ⓕ$2/
+    - xform/^(\w+?)[iu]ang(;.*)/$1Ⓛ$2/
+    - xform/^(\w+?)ang(;.*)/$1Ⓗ$2/
+    - xform/^(\w+?)ian(;.*)/$1Ⓜ$2/
+    - xform/^(\w+?)an(;.*)/$1Ⓙ$2/
+    - xform/^(\w+?)ou(;.*)/$1Ⓩ$2/
+    - xform/^(\w+?)iao(;.*)/$1Ⓝ$2/
+    - xform/^(\w+?)[iu]a(;.*)/$1Ⓧ$2/
+    - xform/^(\w+?)ao(;.*)/$1Ⓒ$2/
+    - xform/^(\w+?)ui(;.*)/$1Ⓥ$2/
+    - xform/^(\w+?)in(;.*)/$1Ⓑ$2/
+    - xform/^sh/Ⓤ/
+    - xform/^ch/Ⓘ/
+    - xform/^zh/Ⓥ/
+    - xlit/ⓆⓌⓇⓉⓎⓊⒾⓄⓅⓈⒹⒻⒼⒽⒿⓀⓁⓏⓍⒸⓋⒷⓃⓂ/qwrtyuiopsdfghjklzxcvbnm/
+    - xform/;.*$//
+    # The underscore marks a dictionary word, not a key to type. Mark its
+    # exact spelling as lower priority than a full unambiguous Chinese path,
+    # and exclude it from librime's unfinished-syllable completion.
+    - abbrev/^_(.+)$/$1/
+    - erase/^_/
+translator:
+  dictionary: rime_frost
+  user_dict: learning_zh
+  prism: learning_flypy
+  enable_user_dict: true
+  # Remember adjoining chosen parts of this composition as reusable terms.
+  # Six spelling units, not six keys: "星 / 舟 / docker / 部署" uses five.
+  core_word_length: 6
+  spelling_hints: 0
+preferred:
+  dictionary: ""
+  db_class: stabledb
+  user_dict: core_words
+  enable_sentence: false
+  enable_completion: false
+  initial_quality: 100
+key_binder:
+  bindings:
+    - {when: has_menu, accept: minus, send: Page_Up}
+    - {when: has_menu, accept: equal, send: Page_Down}
+punctuator:
+  half_shape:
+    ",": "，"
+    ".": "。"
+    "?": "？"
+    "!": "！"
+    ":": "："
+    ";": "；"
+    "(": "（"
+    ")": "）"
+    "[": "【"
+    "]": "】"
+    "<": "《"
+    ">": "》"
+    '"': {pair: ["“", "”"]}
+    "'": {pair: ["‘", "’"]}
+    "/": "、"
+    "\\": "、"
+    "-": "-"
+    "=": "="

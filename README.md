@@ -108,6 +108,10 @@ enable_sentence: false
 
 这样既保留 `engli -> english` 这类体验，又避免 `nihca` 这种正常双拼长码触发大词库的“找不到前缀”慢查询。英文翻译器不参与中文整句组词，所以不会把 `hove bu lw ma` 拼成 `hover不累吗`。
 
+### macOS 边写边译（可选）
+
+[鼠须管·学英语](tools/learning-mode/README.md) 是单独的精简输入法，使用白霜小鹤双拼和本机中英互译。学习版可以整句混输：连打 `woysdockerbuuu`，句尾一次空格输入「我用docker部署」。只有 **Option + 回车** 才输入译文，不用按 F4；原版仍使用上面这套英文前缀候选。
+
 ## 我改了什么
 
 ### 1. 让 custom 补丁真正生效

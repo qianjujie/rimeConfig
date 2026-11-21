@@ -1,0 +1,90 @@
+config_version: "2.5"
+show_notifications_when: never
+style:
+  color_scheme: light
+  color_scheme_dark: dark
+  candidate_list_layout: linear
+  candidate_format: " [label] [candidate] [comment]"
+  inline_preedit: true
+  inline_candidate: false
+  font_face: "PingFang SC"
+  font_point: 16
+  label_font_point: 12
+  comment_font_point: 12
+  panel_padding: 3.5
+  corner_radius: 8
+  hilited_corner_radius: 6
+  line_spacing: 0
+  border_width: 0
+  border_height: 0
+preset_color_schemes:
+  light:
+    name: 小鹤
+    back_color: 0xffffff
+    text_color: 0x424242
+    candidate_text_color: 0x342f2a
+    hilited_candidate_back_color: 0xe4f2de
+    hilited_candidate_label_color: 0x476648
+    hilited_candidate_text_color: 0x34552b
+  dark:
+    name: 小鹤·暗
+    back_color: 0x202020
+    text_color: 0xdddddd
+    candidate_text_color: 0xdddddd
+    hilited_candidate_back_color: 0x3d4830
+    hilited_candidate_label_color: 0xb3caab
+    hilited_candidate_text_color: 0xcfeccd
+  mist_light:
+    name: 雾蓝
+    back_color: 0xFCF9F6
+    text_color: 0x483927
+    candidate_text_color: 0x483927
+    label_color: 0x817261
+    hilited_candidate_back_color: 0xF6E8D8
+    hilited_candidate_text_color: 0x734E21
+    hilited_candidate_label_color: 0x806647
+  mist_dark:
+    name: 雾蓝·暗
+    back_color: 0x332920
+    text_color: 0xF0E7DC
+    candidate_text_color: 0xF0E7DC
+    label_color: 0xC3B4A3
+    hilited_candidate_back_color: 0x624B31
+    hilited_candidate_text_color: 0xFFEBD7
+    hilited_candidate_label_color: 0xDFC5A7
+  amber_light:
+    name: 琥珀
+    back_color: 0xF0FAFF
+    text_color: 0x2D3B49
+    candidate_text_color: 0x2D3B49
+    label_color: 0x586D78
+    hilited_candidate_back_color: 0xB5DEF3
+    hilited_candidate_text_color: 0x144368
+    hilited_candidate_label_color: 0x2F5976
+  amber_dark:
+    name: 琥珀·暗
+    back_color: 0x21272D
+    text_color: 0xD0E2EF
+    candidate_text_color: 0xD0E2EF
+    label_color: 0x98A8B6
+    hilited_candidate_back_color: 0x2A4559
+    hilited_candidate_text_color: 0xADE2FF
+    hilited_candidate_label_color: 0x87BCDB
+  graphite_light:
+    name: 石墨
+    back_color: 0xF7F6F6
+    text_color: 0x2D2826
+    candidate_text_color: 0x2D2826
+    label_color: 0x6A6361
+    hilited_candidate_back_color: 0x4F4743
+    hilited_candidate_text_color: 0xFFFFFF
+    hilited_candidate_label_color: 0xE7E3E3
+  graphite_dark:
+    name: 石墨·暗
+    back_color: 0x201D1C
+    text_color: 0xEBE7E6
+    candidate_text_color: 0xEBE7E6
+    label_color: 0xB5ADAA
+    hilited_candidate_back_color: 0xD8D3D1
+    hilited_candidate_text_color: 0x282321
+    hilited_candidate_label_color: 0x504946

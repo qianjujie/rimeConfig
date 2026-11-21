@@ -1,0 +1,6 @@
+Docker Compose Kubernetes kubectl Helm Podman nginx Redis SQLite MySQL PostgreSQL postgres MongoDB
+Git GitHub GitLab npm pnpm yarn bun Vite Vue React Node Nuxt Next TypeScript JavaScript
+Python pip Django Flask FastAPI Rust cargo Swift Kotlin Java Gradle Maven Golang Go
+Linux macOS iOS Android Windows Bash Zsh SQL API SDK SSH HTTP HTTPS JSON YAML HTML CSS
+DOM JS TS UI UX AI GPT LLM Codex ChatGPT Claude Ollama OpenAI PyTorch CUDA SQLAlchemy
+VSCode Figma Jira Slack Notion Markdown README frontend backend localhost webhook
