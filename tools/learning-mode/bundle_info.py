@@ -20,8 +20,8 @@ info["tsInputMethodCharacterRepertoireKey"] = ["Hans", "Latn"]
 modes = info["ComponentInputModeDict"]
 modes["tsInputModeListKey"].pop(new+".Hant", None)
 modes["tsVisibleInputModeOrderedArrayKey"] = [new+".Hans"]
-info["CFBundleVersion"] = "2.7.6"
-info["CFBundleShortVersionString"] = "2.7.6"
+info["CFBundleVersion"] = "2.8.1"
+info["CFBundleShortVersionString"] = "2.8.1"
 for key in list(info):
     if key.startswith("SU"): del info[key]
 p.write_bytes(plistlib.dumps(info))

@@ -40,14 +40,41 @@ struct CandidateReading {
 }
 
 enum LearningReply: Equatable {
-  case translated(String), unavailable(String)
-  var text: String { switch self { case let .translated(s), let .unavailable(s): s } }
+  case translated(String), unavailable(String), dictionary([EnglishChoice])
+
+  var first: String? {
+    switch self {
+    case let .translated(s): s
+    case let .dictionary(items): items.first?.english
+    case .unavailable: nil
+    }
+  }
+
+  var line: LearningLine {
+    switch self {
+    case let .translated(s): return LearningLine(text: s, isTranslation: true)
+    case let .unavailable(s): return LearningLine(text: s, isTranslation: false)
+    case let .dictionary(items):
+      if items.count == 1 { return LearningLine(text: items[0].english, isTranslation: true) }
+      var text = ""
+      var labels: [NSRange] = []
+      for (i, item) in items.enumerated() {
+        if i > 0 { text += "　" }
+        let number = String(i+1)
+        labels.append(NSRange(location: text.utf16.count, length: number.utf16.count))
+        text += number + "\u{00a0}" + item.english
+        if !item.hint.isEmpty { text += " " + item.hint }
+      }
+      return LearningLine(text: text, isTranslation: !items.isEmpty, labelRanges: labels)
+    }
+  }
 }
 
 struct LearningLine: Equatable {
   static let pending = Self(text: "", isTranslation: false)
   let text: String
   let isTranslation: Bool
+  var labelRanges: [NSRange] = []
 }
 
 // The translator often capitalizes a standalone fragment like a sentence.
@@ -94,7 +121,19 @@ actor LearningEngine {
   static let shared = LearningEngine()
   private var sessions: [LearningQuery.Direction: TranslationSession] = [:]
 
+  private lazy var lexicon: HanYingLexicon? = {
+    #if LEARNING_TESTS
+    guard let path = ProcessInfo.processInfo.environment["RIME_TEST_SENSES_DB"] else { return nil }
+    return HanYingLexicon(url: URL(fileURLWithPath: path))
+    #else
+    return HanYingLexicon(url: HanYingLexicon.installedURL)
+    #endif
+  }()
+
   func translate(_ query: LearningQuery) async -> LearningReply {
+    if query.direction == .english, let choices = lexicon?.choices(for: query.text), !choices.isEmpty {
+      return .dictionary(choices)
+    }
     let source = Locale.Language(identifier: query.direction == .english ? "zh-CN" : "en-US")
     let target = Locale.Language(identifier: query.direction == .english ? "en-US" : "zh-CN")
     let session = sessions[query.direction] ?? TranslationSession(installedSource: source, target: target, preferredStrategy: .lowLatency)
@@ -120,7 +159,7 @@ final class LearningPreview {
   private var debounce: Task<Void, Never>?
   private var running = false
   private var queued: LearningQuery?
-  private var cache: [LearningQuery: String] = [:]
+  private var cache: [LearningQuery: LearningReply] = [:]
   private var order: [LearningQuery] = []
   private var epoch = 0
   private var spelling: String?
@@ -145,8 +184,8 @@ final class LearningPreview {
       do { try await Task.sleep(for: delay) } catch { return }
       guard let self, self.query == next else { return }
       // A cache hit must obey the same quiet period as an uncached result.
-      if let text = self.cache[next] {
-        self.reply = .translated(text); self.changed?(); return
+      if let saved = self.cache[next] {
+        self.reply = saved; self.changed?(); return
       }
       self.queued = next
       self.pump()
@@ -163,9 +202,9 @@ final class LearningPreview {
       guard let self else { return }
       self.running = false
       if self.epoch == generation, self.query == input {
-        if case let .translated(text) = answer, self.cache[input] == nil {
+        if answer.first != nil, self.cache[input] == nil {
           if self.order.count >= 32 { self.cache.removeValue(forKey: self.order.removeFirst()) }
-          self.order.append(input); self.cache[input] = text
+          self.order.append(input); self.cache[input] = answer
         }
         self.reply = answer; self.queued = nil
         self.changed?()
@@ -174,11 +213,15 @@ final class LearningPreview {
     }
   }
 
-  var translation: String? { if case let .translated(text) = reply { text } else { nil } }
+  var translation: String? { reply?.first }
+  func numbered(_ i: Int) -> String? {
+    guard case let .dictionary(items) = reply, items.count > 1, items.indices.contains(i) else { return nil }
+    return items[i].english
+  }
   var line: LearningLine? {
     guard query != nil else { return nil }
     guard let reply else { return .pending }
-    return LearningLine(text: reply.text, isTranslation: translation != nil)
+    return reply.line
   }
   func reset() {
     guard query != nil || !order.isEmpty else { return }

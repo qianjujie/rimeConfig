@@ -79,6 +79,85 @@ enum LearningChecks {
         check(upper != nil && lower != nil && abs(upper! - lower!) <= 1, "translation and source do not share a visible left edge: " + name)
       }
     }
+    if ProcessInfo.processInfo.environment["RIME_TEST_SENSES_DB"] != nil {
+      c.testSetup("learning_flypy", learning:true, ascii:false)
+      func compose(_ spelling: String, _ word: String) {
+        type(spelling)
+        if c.testQuery?.text != word, let slot = snapshot().firstIndex(of:word) {
+          for _ in 0..<slot { _ = key("\u{f703}",124) }
+        }
+        check(c.testQuery?.text == word, "unexpected query: " + (c.testQuery?.text ?? "-") + " (" + spelling + ")")
+        wait { c.testTranslation != nil }
+      }
+      let digitCodes: [UInt16] = [18,19,20,21,23,22]
+      func jump(_ number: Int) {
+        check(key(String(number),digitCodes[number-1],.control), "Control+number not handled")
+      }
+      type("difh")
+      let firstPage = snapshot()
+      let originalMarked = field.marked
+      for number in [6,2,4] {
+        jump(number)
+        check(body.hilightedIndex == number-1 && c.testQuery?.text == firstPage[number-1] &&
+              snapshot() == firstPage && field.committed == "" && field.marked == originalMarked,
+              "direct preview changed composition or selected the wrong word")
+      }
+      wait { c.testTranslation != nil }
+      print("Control+4:", firstPage[3], "→", c.testTranslation!, "(no commit)")
+      screenshot("control-preview")
+      _ = key(" ",49); check(field.committed == firstPage[3], "Space did not confirm the previewed word")
+      field.committed = ""
+
+      type("qkdj"); check(key("=",24), "page down before direct preview")
+      let secondPage = snapshot()
+      guard let shortSlot = secondPage.firstIndex(of:"清") else { fatalError("missing partial candidate") }
+      jump(shortSlot+1)
+      check(c.testQuery?.text == "清" && field.committed == "" && snapshot() == secondPage, "preview jumped off the current page")
+      wait { c.testTranslation != nil }
+      let shortResult = c.testTranslation!
+      _ = key("\r",36,.option)
+      check(field.committed == shortResult && field.marked == "dj", "preview lost the unconverted syllable")
+      field.committed = ""; _ = key("\u{1b}",53)
+
+      for (digit, expected) in [(0,"place"),(1,"place"),(2,"part"),(3,"locality")] {
+        compose("difh","地方")
+        check(c.testUsesBook && panel.learningLine?.text == "1\u{00a0}place 地点　2\u{00a0}part 部分　3\u{00a0}locality 行政区", "wrong dictionary caption")
+        if digit == 0 {
+          let caption = panel.contentView!.subviews.compactMap { $0 as? PreviewCaption }.first!.value
+          for range in panel.learningLine!.labelRanges {
+            let number = caption.attribute(.font, at:range.location, effectiveRange:nil) as? NSFont
+            let word = caption.attribute(.font, at:NSMaxRange(range)+1, effectiveRange:nil) as? NSFont
+            check(number?.pointSize == 11 && word?.pointSize == 14, "only the choice number should use the small label font")
+          }
+          check(panel.learningLine!.labelRanges.count == 3, "missing small choice labels")
+          screenshot("dictionary-senses")
+        }
+        let unmodified = digit == 0 ? "\r" : String(digit)
+        check(key(unmodified,digit == 0 ? 36 : UInt16(17+digit),.option) && field.committed == expected,
+              "wrong sense committed: " + expected)
+        field.committed=""
+      }
+      type("difh"); if let slot = snapshot().firstIndex(of:"地方") { for _ in 0..<slot { _ = key("\u{f703}",124) } }; _ = key("2",19,.option)
+      check(field.committed == "", "pending dictionary shortcut leaked")
+      wait { c.testUsesBook }
+      let secondChinese = snapshot()[1]
+      _ = key("2",19); check(field.committed == secondChinese,"ordinary digits must still select Chinese")
+      field.committed=""
+      compose("difh","地方"); _ = key(" ",49)
+      check(field.committed == "地方","Space must still commit Chinese"); field.committed=""
+      compose("uzuivozi","收拾桌子")
+      check(c.testUsesBook && c.testTranslation == "clear the table","book example pair missed")
+      _ = key("\r",36,.option)
+      check(field.committed == "clear the table","phrase did not commit"); field.committed=""
+      compose("kjkj","看看")
+      check(!c.testUsesBook,"unlisted reduplication incorrectly reduced to 看")
+      print("看看 (Apple):",c.testTranslation!)
+      _ = key("\u{1b}",53)
+      compose("woysdockerbuuu","我用docker部署")
+      check(!c.testUsesBook,"translated a fragment instead of the whole mixed sentence")
+      print("PASS: complete phrase routing, Apple fallback, native panel, default/numbered English and Chinese commits")
+      c.testClose(); delegate.config?.close(); api.cleanup_all_sessions(); api.finalize(); fflush(stdout); exit(0)
+    }
     check(c.menu().items.map(\.title) == ["翻译预览", "主题"], "native menu contains unrelated features")
     check(c.menu().items[0].state == .on, "default must be on")
     let id = "learning_flypy"
@@ -418,7 +497,9 @@ enum LearningChecks {
     panel.update(preedit: "", selRange: .empty, caretPos: 0, candidates: ["测试"], comments: [""],
                  labels: [], highlighted: 0, page: 0, lastPage: true, update: true)
     screenshot("wrapped")
-    check(!caption.isHidden && caption.frame.height>40 && panel.contentView!.bounds.contains(caption.frame) &&
+    let needed = caption.measure(maxWidth:caption.frame.width).height
+    let oneLine = caption.measure(maxWidth: .greatestFiniteMagnitude).height
+    check(!caption.isHidden && needed > oneLine && caption.frame.height >= needed && panel.contentView!.bounds.contains(caption.frame) &&
           caption.value.string==long, "long translation clipped")
     panel.hide()
     let oversized = String(repeating:"超长词", count:24)

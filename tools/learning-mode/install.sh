@@ -2,7 +2,7 @@
 # First install only. Keep the original input source and the current selection untouched.
 set -eu
 cd "$(dirname "$0")"
-built=${1:-"$PWD/dist/xiaohe-2.7.6/RimeLearning.app"}
+built=${1:-"$PWD/dist/xiaohe-2.8.1/RimeLearning.app"}
 dest="$HOME/Library/Input Methods/RimeLearning.app"
 [[ ! -e "$dest" ]] || { echo "An existing learning app is installed at $dest; no changes made." >&2; exit 1; }
 [[ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$built/Contents/Info.plist")" = "local.rime.inputmethod.Learning" ]]

@@ -20,15 +20,16 @@ final class PreviewCaption: NSView {
   override var isFlipped: Bool { true }
   override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
-  func setText(_ text: String, theme: SquirrelTheme) {
+  func setLine(_ line: LearningLine, theme: SquirrelTheme) {
     let style = NSMutableParagraphStyle()
     style.lineBreakMode = .byWordWrapping
     var attrs = theme.previewAttrs
     attrs[.paragraphStyle] = style
-    let next = NSAttributedString(string: text, attributes: attrs)
+    let next = NSMutableAttributedString(string: line.text, attributes: attrs)
+    for range in line.labelRanges { next.addAttributes(theme.previewLabelAttrs, range: range) }
     if !value.isEqual(to: next) {
       value = next; needsDisplay = true
-      setAccessibilityElement(true); setAccessibilityRole(.staticText); setAccessibilityValue(text)
+      setAccessibilityElement(true); setAccessibilityRole(.staticText); setAccessibilityValue(line.text)
     }
   }
   func measure(maxWidth: CGFloat) -> CGSize {

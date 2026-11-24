@@ -41,6 +41,7 @@ final class SquirrelPanel: NSPanel {
   private var selRange: NSRange = .empty
   private var caretPos: Int = 0
   private var candidates: [String] = .init()
+  var candidateCount: Int { candidates.count }
   private var comments: [String] = .init()
   private var labels: [String] = .init()
   private var index: Int = 0
@@ -512,7 +513,7 @@ private extension SquirrelPanel {
       // Resolve the actual drawing origin before aligning the caption.
       sizeSourceText(sourceOnScreen.size)
       let inset = theme.edgeInset.width
-      preview.setText(line.text, theme: theme)
+      preview.setLine(line, theme: theme)
       let leading = view.sourceLeadingInkX - preview.value.leadingInkOffset
       let left = panelRect.minX
       // Wrap within the space right of the source anchor. Sliding a long

@@ -57,6 +57,7 @@ final class SquirrelInputController: IMKInputController {
   func testClose() { destroySession() }
   var testTranslation: String? { learning.translation }
   var testQuery: LearningQuery? { learning.query }
+  var testUsesBook: Bool { if case .dictionary = learning.reply { return true }; return false }
   #endif
 
   // swiftlint:disable:next cyclomatic_complexity
@@ -668,10 +669,27 @@ private extension SquirrelInputController {
     }
     let flags = event.modifierFlags.intersection([.option, .command, .control, .shift])
     let code = event.keyCode
-    if flags == .option, code == 36 || code == 76, learning.query != nil || (!preedit.isEmpty && NSApp.squirrelAppDelegate.panel?.inputController === self) {
+    if flags == .control, let key = event.charactersIgnoringModifiers, key.count == 1,
+       let number = Int(key), (1...6).contains(number),
+       let panel = NSApp.squirrelAppDelegate.panel, panel.inputController === self, panel.isVisible,
+       panel.candidateCount > 0, !rimeAPI.get_option(session, "ascii_mode") {
+      // Highlight only a visible slot. Selection would commit or consume part of the composition.
+      if number <= panel.candidateCount && !event.isARepeat &&
+         rimeAPI.highlight_candidate_on_current_page(session, number - 1) {
+        rimeUpdate()
+      }
+      return true
+    }
+    let optionReturn = code == 36 || code == 76
+    // Use the unmodified key to distinguish the physical shortcut from its Option symbol.
+    let digit = event.charactersIgnoringModifiers.flatMap { ["1","2","3"].firstIndex(of: $0) }
+    let selectedSense = digit.flatMap(learning.numbered)
+    let choosingSense = selectedSense != nil || (digit != nil && learning.query?.direction == .english && learning.reply == nil)
+    if flags == .option, optionReturn || choosingSense,
+       learning.query != nil || (!preedit.isEmpty && NSApp.squirrelAppDelegate.panel?.inputController === self) {
       guard let panel = NSApp.squirrelAppDelegate.panel, panel.isVisible,
             panel.inputController === self, panel.learningLine == learning.line,
-            let text = learning.translation, !event.isARepeat else { return true }
+            let text = optionReturn ? learning.translation : selectedSense, !event.isARepeat else { return true }
       let remainder = candidateReading?.remainder ?? ""
       if remainder.isEmpty {
         rimeAPI.clear_composition(session)

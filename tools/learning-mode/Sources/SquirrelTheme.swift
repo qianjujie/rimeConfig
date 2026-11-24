@@ -124,6 +124,14 @@ final class SquirrelTheme {
     .font: labelFont,
     .baselineOffset: baseOffset + (!vertical ? (font.pointSize - labelFont.pointSize) / 2.5 : 0)
   ]
+  // Keep the same label-to-word proportion on the smaller English row.
+  private(set) lazy var previewLabelAttrs: [NSAttributedString.Key: Any] = {
+    let size = (labelFont.pointSize * previewFont.pointSize / font.pointSize).rounded()
+    var attrs = labelAttrs
+    attrs[.font] = labelFont.withSize(size)
+    attrs[.baselineOffset] = (previewFont.pointSize - size) / 2.5
+    return attrs
+  }()
   private(set) lazy var labelHighlightedAttrs: [NSAttributedString.Key: Any] = [
     .foregroundColor: highlightedCandidateLabelColor ?? blendColor(foregroundColor: highlightedCandidateTextColor, backgroundColor: highlightedBackColor),
     .font: labelFont,
