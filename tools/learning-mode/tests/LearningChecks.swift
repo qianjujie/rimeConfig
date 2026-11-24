@@ -46,7 +46,17 @@ enum LearningChecks {
       let e = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: flags, timestamp: 0, windowNumber: 0, context: nil, characters: text, charactersIgnoringModifiers: text, isARepeat: false, keyCode: code)!
       return c.handle(e, client: field)
     }
+    func shiftFlag(_ down: Bool) {
+      let e = NSEvent.keyEvent(with:.flagsChanged,location:.zero,modifierFlags:down ? .shift : [],timestamp:0,
+        windowNumber:0,context:nil,characters:"",charactersIgnoringModifiers:"",isARepeat:false,keyCode:56)!
+      _ = c.handle(e,client:field)
+    }
     func type(_ text: String) { for ch in text { check(key(String(ch), ch == " " ? 49 : 0), "unhandled example character: \(ch)") } }
+    func typeEnglishSentence(_ text: String) {
+      let parts = text.split(separator: " ", maxSplits: 1)
+      type(String(parts[0])); check(key(" ",49,.shift), "explicit phrase space")
+      type(String(parts[1]))
+    }
     func snapshot() -> [String] {
       var ctx = RimeContext_stdbool.rimeStructInit()
       guard api.get_context(c.testSession, &ctx) else { return [] }
@@ -89,6 +99,92 @@ enum LearningChecks {
         check(c.testQuery?.text == word, "unexpected query: " + (c.testQuery?.text ?? "-") + " (" + spelling + ")")
         wait { c.testTranslation != nil }
       }
+      // Use an actual NSTextView, including a prefix the input method must never replace.
+      let textView = NSTextView(frame:NSRect(x:0,y:0,width:340,height:80))
+      let testScreen = NSScreen.main!.visibleFrame
+      let draftWindow = NSWindow(contentRect:NSRect(x:testScreen.midX,y:testScreen.midY,width:340,height:80),styleMask:.borderless,backing:.buffered,defer:false)
+      draftWindow.contentView!.addSubview(textView); draftWindow.alphaValue=0; draftWindow.orderFrontRegardless()
+      field.editor = textView
+      c.testSetup("learning_flypy",learning:true,ascii:true)
+      type("translat")
+      check(panel.candidateCount > 1 && c.testQuery?.text == "translat","English completions missing or replaced literal")
+      _ = key("2",19,.control)
+      wait { c.testTranslation != nil }
+      check(c.testQuery?.text == "translate" && c.testTranslation == "翻译" && field.committed == "" && field.marked == "translat","English preview changed draft or wrong gloss")
+      _ = key(" ",49); check(field.committed == "translate","Space did not accept highlighted English"); field.committed = ""
+      type("bank"); wait { c.testTranslation != nil }
+      check(panel.candidateCount > 1 && c.testUsesBook && panel.learningLine?.text.contains("岸")==true, "bank lost nonfinancial sense")
+      screenshot("reverse-bank")
+      _ = key("2",19,.option); check(field.committed == "岸","numbered Chinese meaning did not commit"); field.committed = ""
+      type("GPT4"); _ = key("\r",36); check(field.committed == "GPT4", "digit selected a suggestion"); field.committed = ""
+      // IMK may supply already-capitalized letters without modifier flags (Sublime).
+      c.testSetup("learning_flypy",learning:true,ascii:false)
+      type("LLM"); wait { c.testTranslation != nil }
+      check(panel.candidateCount >= 3 && c.testTranslation == "大语言模型","unmodified uppercase fell back to Rime's truncated word list")
+      _ = key("3",20,.control)
+      check(c.testQuery?.text=="large language model","uppercase completion did not receive focus")
+      _ = key("\u{7f}",51,.capsLock); _ = key("Q",12,.capsLock)
+      check(field.marked=="LLQ" && c.testQuery?.text=="LLQ","editing suggestion changed the original spelling")
+      _ = key("\u{1b}",53)
+      type("LLMbuuu")
+      check(snapshot().first == "LLM部署", "standalone acronym no longer supports a Chinese continuation")
+      _ = key("\u{1b}",53)
+      for ascii in [false,true] {
+        for eraseKey in ["\u{7f}",""] {
+          c.testSetup("learning_flypy",learning:true,ascii:ascii)
+          textView.string="要用"; textView.setSelectedRange(NSRange(location:2,length:0))
+          for ch in "LLM" { check(key(String(ch), ch == "M" ? 46:37, .capsLock),"Caps Lock spelling") }
+          check(textView.hasMarkedText() && textView.string=="要用LLM" && c.testQuery?.text=="LLM","Caps Lock did not compose LLM: \(textView.string) / \(String(describing:c.testQuery))")
+          wait { c.testTranslation != nil }
+          check(panel.candidateCount >= 3 && c.testTranslation == "大语言模型" && panel.learningLine?.text.contains("法学硕士")==true,
+                "LLM missing language-model/degree distinction or upper choices")
+          if !ascii && !eraseKey.isEmpty { screenshot("reverse-llm") }
+          check(key(eraseKey,51,.capsLock), "Backspace escaped to the editor: ascii=\(ascii) characters=\(eraseKey.debugDescription)")
+          check(textView.string == "要用LL" && c.testQuery?.text=="LL", "Backspace failed to update both editor and preview")
+          _ = key("Q",12,.capsLock)
+          check(textView.string == "要用LLQ" && c.testQuery?.text=="LLQ","deleted M reappeared")
+          for _ in 0..<3 { _ = key(eraseKey,51,.capsLock) }
+          check(textView.string == "要用" && !panel.isVisible && field.committed.isEmpty,"empty English composition not dismissed")
+        }
+      }
+      for ascii in [false,true] {
+        for (keyText,code) in [(" ",UInt16(49)),("\r",UInt16(36))] {
+          c.testSetup("learning_flypy",learning:true,ascii:ascii)
+          textView.string = "要用"; textView.setSelectedRange(NSRange(location:2,length:0))
+          shiftFlag(true)
+          for ch in "LLM" { check(key(String(ch),ch == "L" ? 37:46,.shift), "uppercase raw key") }
+          shiftFlag(false)
+          check(api.get_option(c.testSession,"ascii_mode") == ascii, "typing capitals was mistaken for a Shift tap (ascii=\(ascii))")
+          check(textView.hasMarkedText() && textView.string == "要用LLM","segmented or lost inline English: " + textView.string)
+          check(key(keyText,code) && field.committed == "LLM" && !textView.hasMarkedText() &&
+                textView.string == "要用LLM" && !panel.isVisible, "first separator did not confirm only LLM")
+          c.commitComposition(field)
+          check(textView.string == "要用LLM" && field.committed == "LLM","stale composition")
+          field.committed = ""
+          type("x")
+          check(textView.string == "要用LLMx" && field.committed == "", "old word resurrected on next letter: " + textView.string)
+          _ = key("\u{1b}",53)
+          check(textView.string == "要用LLM","cancel removed confirmed English")
+        }
+      }
+      for ascii in [false,true] {
+        c.testSetup("learning_flypy",learning:true,ascii:ascii)
+        textView.string = ""; textView.setSelectedRange(NSRange(location:0,length:0))
+        let raw = "ENGLIEHENGENG"
+        shiftFlag(true)
+        for ch in raw { _ = key(String(ch),0,.shift) }
+        shiftFlag(false)
+        check(key(" ",49) && field.committed == raw && textView.string == raw && !textView.hasMarkedText(),
+              "long English spelling failed to commit intact")
+        field.committed = ""
+      }
+      c.testSetup("learning_flypy",learning:true,ascii:true)
+      shiftFlag(true); shiftFlag(false)
+      check(!api.get_option(c.testSession,"ascii_mode"),"standalone Shift no longer switched to Chinese")
+      shiftFlag(true); shiftFlag(false)
+      check(api.get_option(c.testSession,"ascii_mode"),"standalone Shift no longer switched to English")
+      field.editor = nil; draftWindow.orderOut(nil)
+      c.testSetup("learning_flypy",learning:true,ascii:false)
       let digitCodes: [UInt16] = [18,19,20,21,23,22]
       func jump(_ number: Int) {
         check(key(String(number),digitCodes[number-1],.control), "Control+number not handled")
@@ -349,7 +445,7 @@ enum LearningChecks {
     print("sentence:", snapshot(), panel.learningLine?.text ?? "-"); screenshot("zh-en")
     _ = key("\u{1b}",53)
     c.testSetup("learning_flypy", learning: true, ascii: true)
-    type("See you tomorrow."); wait { c.testTranslation != nil }
+    typeEnglishSentence("See you tomorrow."); wait { c.testTranslation != nil }
     check(field.marked == "See you tomorrow.", "English spaces or punctuation lost")
     let reverse = c.testTranslation!
     check(reverse.unicodeScalars.contains(where: { $0.properties.isIdeographic }), "English did not translate to Chinese")
@@ -358,9 +454,9 @@ enum LearningChecks {
     c.testRefreshPanel(); screenshot("en-zh-dark")
     app.appearance = NSAppearance(named: .aqua); panel.appearance = app.appearance
     _ = key("\r",36,.option); check(field.committed == reverse, "reverse commit failed")
-    field.committed = ""; type("hello world"); _ = key("\r",36)
+    field.committed = ""; typeEnglishSentence("hello world"); _ = key("\r",36)
     check(field.committed == "hello world", "ordinary Return changed original English")
-    field.committed = ""; type("cancel this"); _ = key("\u{1b}",53)
+    field.committed = ""; typeEnglishSentence("cancel this"); _ = key("\u{1b}",53)
     check(field.committed == "" && field.marked == "", "Escape did not discard draft")
     c.testSetup("learning_flypy", learning: false, ascii: true)
     check(!key("a"), "normal English passthrough affected")
@@ -420,7 +516,7 @@ enum LearningChecks {
         let reply = c.testTranslation!, window = panel.frame, source = primaryFrame()
         let x = firstX(), y = baseline(), line = hostLine()
         for n in 1...12 {
-          type(" ")
+          check(key(" ",49,n == 1 ? .shift : []), "space in English phrase")
           check(field.marked == word+String(repeating:" ",count:n) && editor.hasMarkedText(), "editor lost an English space")
           let sourceText = body.textContentStorage.attributedString?.string
           check(sourceText == word && c.testQuery?.text == word &&

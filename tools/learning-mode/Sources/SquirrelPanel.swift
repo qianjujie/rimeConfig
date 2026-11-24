@@ -13,6 +13,7 @@ final class SquirrelPanel: NSPanel {
   private let back: NSVisualEffectView
   private let preview = PreviewCaption()
   weak var inputController: SquirrelInputController?
+  let sublimeKeys = SublimePreviewKeys()
   var learningLine: LearningLine?
 
   // Repaint existing rows only; never ask Rime to recompute or select a candidate.
@@ -172,6 +173,7 @@ final class SquirrelPanel: NSPanel {
   }
 
   func hide() {
+    sublimeKeys.clear()
     learningLine = nil
     inputController = nil
     statusTimer?.invalidate()
@@ -589,6 +591,7 @@ private extension SquirrelPanel {
   }
 
   func show(status message: String) {
+    sublimeKeys.clear()
     learningLine = nil
     view.highlightsEnglishDraft = false
 

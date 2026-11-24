@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the self-contained, single-schema SharedSupport. Never touch a live user profile."""
 from pathlib import Path
-import io, re, sys, shutil, subprocess, tarfile, tempfile
+import io, json, re, sys, shutil, sqlite3, subprocess, tarfile, tempfile
 here = Path(__file__).resolve().parent
 stock = Path("/Library/Input Methods/Squirrel.app/Contents")
 dest = Path(sys.argv[1]).resolve()
@@ -41,10 +41,13 @@ with tarfile.open(here/"vendor/rime-frost/dictionaries.tar.gz", "r:gz") as archi
 # One English word is one spelling in the same Rime sentence graph as Chinese.
 # Keep the original word and lowercase input distinct: docker stays docker.
 words = {}
+completion_words = {}
 for filename in ("en.dict.yaml", "en_ext.dict.yaml"):
     data = (here/"vendor/rime-frost"/filename).read_text(encoding="utf-8").split("\n...\n", 1)[1]
     for line in data.splitlines():
         fields = line.split("\t")
+        if len(fields) >= 2 and fields[0] == fields[1] and re.fullmatch(r"[A-Za-z][A-Za-z'-]+",fields[0]):
+            completion_words.setdefault(fields[0].lower(), (filename != "en.dict.yaml",fields[0]))
         if len(fields) >= 2 and fields[0] == fields[1] and re.fullmatch(r"[A-Za-z]{4,}", fields[0]):
             for word in (fields[0], fields[0].lower()):
                 words[word] = 1
@@ -53,6 +56,7 @@ for filename in ("en.dict.yaml", "en_ext.dict.yaml"):
 for term in (here/"mixed-terms.txt").read_text().split():
     if not re.fullmatch(r"[A-Za-z]{2,}", term):
         raise ValueError("Invalid mixed term: " + term)
+    completion_words.setdefault(term.lower(),(0,term))
     words[term] = 1000
     if len(term) >= 3:
         words[term.lower()] = 1000
@@ -61,6 +65,30 @@ with (dest/"learning_en.dict.yaml").open("x", encoding="utf-8") as out:
               "---\nname: learning_en\nversion: '1'\nsort: by_weight\n...\n")
     for word, weight in sorted(words.items()):
         out.write(f"{word}\t_{word}\t{weight}\n")
+# Pre-rank proper prefix matches at build time, not on the keyboard thread.
+# Reuse the same corpus ranking as the repository's original English prefix table.
+# If building the standalone learning-mode directory, still use its bundled lists.
+weights = {}
+frequency_source = here.parents[1]/"easy_en.dict.yaml"
+if frequency_source.is_file():
+    with frequency_source.open(encoding="utf-8") as source:
+        for line in source:
+            fields = line.rstrip("\n").split("\t")
+            if len(fields)==3 and fields[0]==fields[1] and fields[0] in completion_words and fields[2].isdigit():
+                weights[fields[0]] = max(weights.get(fields[0],0),int(fields[2]))
+prefixes = {}
+def rank(row):
+    key,(extra,form)=row
+    inflected = any(key.endswith(suffix) and (key[:-len(suffix)] in completion_words or key[:-len(suffix)]+"e" in completion_words) for suffix in ("s","es","d","ed","ing"))
+    return (-weights.get(key,0),extra,inflected,len(key),key)
+for word,(_,form) in sorted(completion_words.items(),key=rank):
+    for end in range(2,len(word)):
+        row=prefixes.setdefault(word[:end],[])
+        if len(row)<5: row.append(form)
+prefixes["llm"] = ["LLMs", "large language model"] + [w for w in prefixes.get("llm",[]) if w.lower() != "llms"]
+with sqlite3.connect(dest/"EnglishCompletions.sqlite3") as db:
+    db.execute("CREATE TABLE lookup (word TEXT PRIMARY KEY, choices TEXT NOT NULL) WITHOUT ROWID")
+    db.executemany("INSERT INTO lookup VALUES (?,?)",((k,json.dumps([[v,""] for v in vs[:5]])) for k,vs in prefixes.items()))
 with tempfile.TemporaryDirectory() as scratch:
     subprocess.run([stock/"MacOS/rime_deployer","--build",scratch,dest,dest/"build"],cwd=scratch,check=True)
 shutil.copy2(dest/"squirrel.yaml",dest/"build/squirrel.yaml")

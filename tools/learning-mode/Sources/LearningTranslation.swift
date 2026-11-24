@@ -40,12 +40,12 @@ struct CandidateReading {
 }
 
 enum LearningReply: Equatable {
-  case translated(String), unavailable(String), dictionary([EnglishChoice])
+  case translated(String), unavailable(String), dictionary([LexicalChoice])
 
   var first: String? {
     switch self {
     case let .translated(s): s
-    case let .dictionary(items): items.first?.english
+    case let .dictionary(items): items.first?.text
     case .unavailable: nil
     }
   }
@@ -55,14 +55,14 @@ enum LearningReply: Equatable {
     case let .translated(s): return LearningLine(text: s, isTranslation: true)
     case let .unavailable(s): return LearningLine(text: s, isTranslation: false)
     case let .dictionary(items):
-      if items.count == 1 { return LearningLine(text: items[0].english, isTranslation: true) }
+      if items.count == 1 { return LearningLine(text: items[0].text, isTranslation: true) }
       var text = ""
       var labels: [NSRange] = []
       for (i, item) in items.enumerated() {
         if i > 0 { text += "　" }
         let number = String(i+1)
         labels.append(NSRange(location: text.utf16.count, length: number.utf16.count))
-        text += number + "\u{00a0}" + item.english
+        text += number + "\u{00a0}" + item.text
         if !item.hint.isEmpty { text += " " + item.hint }
       }
       return LearningLine(text: text, isTranslation: !items.isEmpty, labelRanges: labels)
@@ -121,16 +121,36 @@ actor LearningEngine {
   static let shared = LearningEngine()
   private var sessions: [LearningQuery.Direction: TranslationSession] = [:]
 
-  private lazy var lexicon: HanYingLexicon? = {
+  private lazy var lexicon: LexicalIndex? = {
     #if LEARNING_TESTS
     guard let path = ProcessInfo.processInfo.environment["RIME_TEST_SENSES_DB"] else { return nil }
-    return HanYingLexicon(url: URL(fileURLWithPath: path))
+    return LexicalIndex(url: URL(fileURLWithPath: path))
     #else
-    return HanYingLexicon(url: HanYingLexicon.installedURL)
+    return LexicalIndex(url: LexicalIndex.hanYingURL)
+    #endif
+  }()
+
+  private lazy var longman: LexicalIndex? = {
+    #if LEARNING_TESTS
+    guard let path = ProcessInfo.processInfo.environment["RIME_TEST_LONGMAN_DB"] else { return nil }
+    return LexicalIndex(url: URL(fileURLWithPath:path))
+    #else
+    return LexicalIndex(url: LexicalIndex.longmanURL)
     #endif
   }()
 
   func translate(_ query: LearningQuery) async -> LearningReply {
+    if query.direction == .chinese {
+      let word = query.text
+      var choices = longman?.choices(for:word) ?? []
+      if choices.isEmpty && word.lowercased() != word { choices = longman?.choices(for:word.lowercased()) ?? [] }
+      if choices.isEmpty && word.count <= 6 && word.uppercased() != word { choices = longman?.choices(for:word.uppercased()) ?? [] }
+      if ["llm","llms","large language model"].contains(word.lowercased()) {
+        // Contemporary developer usage complements Longman's degree entry.
+        choices = [LexicalChoice(text:"大语言模型",hint:"")] + choices.filter { $0.text != "大语言模型" }
+      }
+      if !choices.isEmpty { return .dictionary(Array(choices.prefix(3))) }
+    }
     if query.direction == .english, let choices = lexicon?.choices(for: query.text), !choices.isEmpty {
       return .dictionary(choices)
     }
@@ -216,7 +236,7 @@ final class LearningPreview {
   var translation: String? { reply?.first }
   func numbered(_ i: Int) -> String? {
     guard case let .dictionary(items) = reply, items.count > 1, items.indices.contains(i) else { return nil }
-    return items[i].english
+    return items[i].text
   }
   var line: LearningLine? {
     guard query != nil else { return nil }

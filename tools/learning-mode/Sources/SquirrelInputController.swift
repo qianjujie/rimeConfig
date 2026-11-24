@@ -17,6 +17,9 @@ final class SquirrelInputController: IMKInputController {
   private var selRange: NSRange = .empty
   private var caretPos: Int = 0
   private var lastModifiers: NSEvent.ModifierFlags = .init()
+  // In English preview mode letter keys go to the draft, not to Rime. Defer
+  // Shift until release so Rime sees only a real tap, never Shift used to type.
+  private var deferredEnglishShiftTap: Bool?
   private var session: RimeSessionId = 0
   private var schemaId: String = ""
   private var inlinePreedit = false
@@ -29,8 +32,14 @@ final class SquirrelInputController: IMKInputController {
   private var chordDuration: TimeInterval = 0
   private var currentApp: String = ""
   private var english = EnglishDraft()
+  private static let completions = Bundle.main.sharedSupportURL.flatMap { LexicalIndex(url: $0.appendingPathComponent("EnglishCompletions.sqlite3")) }
+  private var englishWords = [String]()
+  private var englishIndex = 0
+  private var englishWordSeed = ""
   private let learning = LearningPreview()
   private var candidateReading: CandidateReading?
+  // A complete English candidate, not a Chinese syllable or a partial conversion.
+  private var literalCandidate: String?
   // One preference shared by all input sessions. A fresh installation starts enabled.
   private static let preferenceKey = "LearningPreviewEnabled"
   #if LEARNING_TESTS
@@ -109,10 +118,27 @@ final class SquirrelInputController: IMKInputController {
         _ = processKey(rimeKeycode, modifiers: rimeModifiers)
       }
 
+      if deferredEnglishShiftTap != nil && !changes.intersection([.option,.command,.control,.capsLock]).isEmpty {
+        deferredEnglishShiftTap = false
+      }
       // Need to process release before modifier down. Because
       // sometimes release event is delayed to next modifier keydown.
       var buffer = [(keycode: UInt32, modifier: UInt32)]()
       for flag in [NSEvent.ModifierFlags.shift, .control, .option, .command] where changes.contains(flag) {
+        if flag == .shift {
+          if modifiers.contains(.shift), learningEnabled, rimeAPI.get_option(session, "ascii_mode") {
+            deferredEnglishShiftTap = modifiers.intersection([.control,.command,.option]).isEmpty
+            continue
+          }
+          if !modifiers.contains(.shift), let tap = deferredEnglishShiftTap {
+            deferredEnglishShiftTap = nil
+            if tap {
+              buffer.append((rimeKeycode, rimeModifiers | kShiftMask.rawValue))
+              buffer.append((rimeKeycode, rimeModifiers | kReleaseMask.rawValue))
+            }
+            continue
+          }
+        }
         if modifiers.contains(flag) { // New modifier
           buffer.append((keycode: rimeKeycode, modifier: rimeModifiers))
         } else { // Release
@@ -127,6 +153,17 @@ final class SquirrelInputController: IMKInputController {
       rimeUpdate()
 
     case .keyDown:
+      if deferredEnglishShiftTap != nil { deferredEnglishShiftTap = false }
+      // Caps Lock changes letter case, not Backspace. Passing LockMask to
+      // Rime here can return false: the host then deletes the entire marked
+      // range while Rime still owns the old spelling. Use the hardware key
+      // even for clients that send no characters for Delete.
+      if [51,117].contains(event.keyCode), modifiers.intersection([.shift,.control,.option,.command]).isEmpty,
+         rimeAPI.get_input(session).map({ $0.pointee != 0 }) == true {
+        _ = processKey(UInt32(event.keyCode == 51 ? XK_BackSpace : XK_Delete), modifiers:0)
+        rimeUpdate()
+        return true
+      }
       if let result = handleLearningKey(event) { return result }
       // ignore Command+X hotkeys.
       if modifiers.contains(.command) {
@@ -161,7 +198,31 @@ final class SquirrelInputController: IMKInputController {
     return handled
   }
 
+  var needsSublimePreviewKeys: Bool {
+    currentApp == SublimePreviewKeys.host && learningEnabled &&
+      NSWorkspace.shared.frontmostApplication?.bundleIdentifier == currentApp &&
+      NSApp.squirrelAppDelegate.panel?.inputController === self && NSApp.squirrelAppDelegate.panel?.isVisible == true
+  }
+
+  // Both the ordinary IMK event and the Sublime shortcut only move the highlight.
+  func previewCandidate(_ number: Int, repeatKey: Bool = false) -> Bool {
+    guard learningEnabled, let panel = NSApp.squirrelAppDelegate.panel, panel.inputController === self,
+          panel.isVisible, panel.candidateCount > 0 else { return false }
+    guard !repeatKey, number > 0, number <= panel.candidateCount else { return true }
+    let index = number - 1
+    if !englishWords.isEmpty {
+      if englishWords.indices.contains(index), englishIndex != index { englishIndex = index; showEnglish() }
+    } else if rimeAPI.highlight_candidate_on_current_page(session, index) {
+      rimeUpdate()
+    }
+    return true
+  }
+
   func selectCandidate(_ index: Int) -> Bool {
+    if !english.text.isEmpty {
+      guard englishWords.indices.contains(index) else { return false }
+      finishEnglish(as:englishWords[index]); return true
+    }
     let success = rimeAPI.select_candidate_on_current_page(session, index)
     if success {
       rimeUpdate()
@@ -239,6 +300,7 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func deactivateServer(_ sender: Any!) {
+    deferredEnglishShiftTap = nil
     // print("[DEBUG] deactivateServer: \(sender ?? "nil")")
     hidePalettes()
     commitComposition(sender)
@@ -246,7 +308,9 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func hidePalettes() {
+    literalCandidate = nil
     candidateReading = nil
+    englishWords = []; englishWordSeed = ""; englishIndex = 0
     learning.reset()
     if let panel = NSApp.squirrelAppDelegate.panel, panel.inputController === self || panel.inputController == nil {
       panel.hide()
@@ -270,9 +334,10 @@ final class SquirrelInputController: IMKInputController {
     if !english.text.isEmpty { finishEnglish(); return }
     //  commit raw input
     if session != 0 {
-      if let input = rimeAPI.get_input(session) {
-        commit(string: String(cString: input))
+      if let input = rimeAPI.get_input(session), input.pointee != 0 {
+        let raw = String(cString: input)
         rimeAPI.clear_composition(session)
+        commit(string: raw)
       }
     }
   }
@@ -476,7 +541,7 @@ private extension SquirrelInputController {
     }
 
     if !english.text.isEmpty {
-      if learningEnabled && rimeAPI.get_option(session, "ascii_mode") { showEnglish(); return }
+      if learningEnabled && rimeAPI.get_option(session, "ascii_mode") == english.beganInASCII { showEnglish(); return }
       finishEnglish()
     }
 
@@ -489,7 +554,16 @@ private extension SquirrelInputController {
       let end = String.Index(preedit.utf8.index(preedit.utf8.startIndex, offsetBy: Int(ctx.composition.sel_end)), within: preedit) ?? preedit.startIndex
       let caretPos = String.Index(preedit.utf8.index(preedit.utf8.startIndex, offsetBy: Int(ctx.composition.cursor_pos)), within: preedit) ?? preedit.startIndex
 
-      if inlineCandidate {
+      let raw = rimeAPI.get_input(session).map { String(cString: $0) } ?? ""
+      let hi = Int(ctx.menu.highlighted_candidate_index)
+      let selected = hi >= 0 && hi < Int(ctx.menu.num_candidates) ? String(cString: ctx.menu.candidates[hi].text) : ""
+      literalCandidate = !raw.isEmpty && raw.utf8.allSatisfy { (65...90).contains($0) || (97...122).contains($0) } &&
+        selected.caseInsensitiveCompare(raw) == .orderedSame && ctx.commit_text_preview.map { String(cString: $0) } == selected ? raw : nil
+      if inlinePreedit, let word = literalCandidate {
+        // Chinese syllable separators are not part of an English spelling ("L L M").
+        show(preedit: word, selRange: NSRange(location: 0, length: word.utf16.count),
+             caretPos: min(Int(rimeAPI.get_caret_pos(session)), word.utf16.count))
+      } else if inlineCandidate {
         var candidatePreview = ctx.commit_text_preview.map { String(cString: $0) } ?? ""
         let endOfCandidatePreview = candidatePreview.endIndex
         if inlinePreedit {
@@ -554,6 +628,19 @@ private extension SquirrelInputController {
         candidates.append(candidate.text.map { String(cString: $0) } ?? "")
         comments.append(candidate.comment.map { String(cString: $0) } ?? "")
       }
+      // Some editors deliver uppercase letters without a Caps Lock flag. Once
+      // Rime identifies a complete standalone acronym, use the same English
+      // menu as ASCII mode, regardless of how the uppercase keys arrived.
+      if learningEnabled, raw.count >= 2, literalCandidate == raw,
+         raw.utf8.allSatisfy({ (65...90).contains($0) }),
+         candidates.allSatisfy({ $0.utf8.allSatisfy { $0 < 128 } }),
+         Int(rimeAPI.get_caret_pos(session)) == raw.utf8.count {
+        _ = rimeAPI.free_context(&ctx)
+        rimeAPI.clear_composition(session)
+        english = EnglishDraft(); english.beganInASCII = rimeAPI.get_option(session,"ascii_mode")
+        english.insert(raw); showEnglish()
+        return
+      }
       var labels = [String]()
       // swiftlint:disable identifier_name
       if let select_keys = ctx.menu.select_keys {
@@ -565,7 +652,6 @@ private extension SquirrelInputController {
         }
       }
       // swiftlint:enable identifier_name
-      let hi = Int(ctx.menu.highlighted_candidate_index)
       candidateReading = nil
       var spelling: String?
       if learningEnabled, candidates.indices.contains(hi), ctx.composition.length > 0,
@@ -634,6 +720,7 @@ private extension SquirrelInputController {
       panel.learningLine = learning.line ?? (learningEnabled && composing ? .pending : nil)
       panel.update(preedit: preedit, selRange: selRange, caretPos: caretPos, candidates: candidates, comments: comments, labels: labels,
                    highlighted: highlighted, page: page, lastPage: lastPage, update: true)
+      panel.sublimeKeys.update(owner:self, count:panel.candidateCount)
     }
   }
 }
@@ -641,25 +728,34 @@ private extension SquirrelInputController {
 // The IME owns only its own marked (not yet committed) English text.
 // No global key monitor, clipboard, accessibility permission or surrounding-text reads.
 private extension SquirrelInputController {
-  func finishEnglish() {
-    let original = english.text
+  func finishEnglish(as chosen: String? = nil) {
+    let original = chosen ?? english.text
     english = EnglishDraft()
     if !original.isEmpty { commit(string: original) }
     learning.reset()
   }
 
   func showEnglish() {
+    literalCandidate = nil
     candidateReading = nil
     let text = english.text
     let end = english.caret
     let preview = english.previewText
+    if englishWordSeed != text {
+      englishWordSeed = text; englishIndex = 0; englishWords = []
+      if text.count >= 2 && text.utf8.allSatisfy({ (65...90).contains($0) || (97...122).contains($0) }) {
+        let matches = Self.completions?.choices(for:text.lowercased(),limit:5).map(\.text) ?? []
+        if !matches.isEmpty { englishWords = [text] + matches }
+      }
+    }
+    let reading = englishWords.indices.contains(englishIndex) ? englishWords[englishIndex] : preview
     // Unlike a pinyin spelling, trailing spaces can't change this reading.
     // Keep both an in-flight request and a ready caption for equivalent drafts.
-    learning.update(preview.isEmpty ? nil : LearningQuery(text:preview, direction:.chinese))
+    learning.update(preview.isEmpty ? nil : LearningQuery(text:reading, direction:.chinese))
     show(preedit: text, selRange: NSRange(location: 0, length: text.utf16.count), caretPos: end)
     if preview.isEmpty { hidePalettes(); return }
-    showPanel(preedit: preview, selRange: NSRange(location: 0, length: 0), caretPos: 0,
-              candidates: [], comments: [], labels: [], highlighted: 0, page: 0, lastPage: true)
+    showPanel(preedit: englishWords.isEmpty ? preview : "", selRange: NSRange(location:0,length:0), caretPos:0,
+              candidates:englishWords, comments:Array(repeating:"",count:englishWords.count), labels:[], highlighted:englishIndex, page:0, lastPage:true)
   }
 
   func handleLearningKey(_ event: NSEvent) -> Bool? {
@@ -670,21 +766,22 @@ private extension SquirrelInputController {
     let flags = event.modifierFlags.intersection([.option, .command, .control, .shift])
     let code = event.keyCode
     if flags == .control, let key = event.charactersIgnoringModifiers, key.count == 1,
-       let number = Int(key), (1...6).contains(number),
-       let panel = NSApp.squirrelAppDelegate.panel, panel.inputController === self, panel.isVisible,
-       panel.candidateCount > 0, !rimeAPI.get_option(session, "ascii_mode") {
-      // Highlight only a visible slot. Selection would commit or consume part of the composition.
-      if number <= panel.candidateCount && !event.isARepeat &&
-         rimeAPI.highlight_candidate_on_current_page(session, number - 1) {
-        rimeUpdate()
-      }
+       let number = Int(key), (1...6).contains(number), previewCandidate(number, repeatKey:event.isARepeat) {
       return true
     }
     let optionReturn = code == 36 || code == 76
+    if flags.isEmpty, (code == 49 || optionReturn), let word = literalCandidate,
+       let panel = NSApp.squirrelAppDelegate.panel, panel.isVisible, panel.inputController === self {
+      // End Rime's composition before notifying the editor; it may call us back synchronously.
+      rimeAPI.clear_composition(session)
+      commit(string: word)
+      return true
+    }
     // Use the unmodified key to distinguish the physical shortcut from its Option symbol.
     let digit = event.charactersIgnoringModifiers.flatMap { ["1","2","3"].firstIndex(of: $0) }
     let selectedSense = digit.flatMap(learning.numbered)
-    let choosingSense = selectedSense != nil || (digit != nil && learning.query?.direction == .english && learning.reply == nil)
+    let choosingSense = selectedSense != nil || (digit != nil && learning.query != nil &&
+      (learning.reply == nil || !english.text.isEmpty))
     if flags == .option, optionReturn || choosingSense,
        learning.query != nil || (!preedit.isEmpty && NSApp.squirrelAppDelegate.panel?.inputController === self) {
       guard let panel = NSApp.squirrelAppDelegate.panel, panel.isVisible,
@@ -701,7 +798,19 @@ private extension SquirrelInputController {
       if !remainder.isEmpty { rimeUpdate() }
       return true
     }
-    guard rimeAPI.get_option(session, "ascii_mode"),
+    let ascii = rimeAPI.get_option(session, "ascii_mode")
+    // A lowercase continuation in Chinese mode can be the next Xiaohe syllable.
+    // Give Rime the original prefix back; a highlighted suggestion is not typed text.
+    if !ascii, !english.beganInASCII, !english.text.isEmpty, english.caret == english.text.utf16.count,
+       english.text.utf8.allSatisfy({ (65...90).contains($0) }), flags.isEmpty,
+       !event.modifierFlags.contains(.capsLock), event.characters?.first.map({ $0.isASCII && $0.isLowercase }) == true,
+       rimeAPI.set_input(session,english.text) {
+      english = EnglishDraft(); englishWordSeed = ""; englishWords = []; englishIndex = 0
+      return nil
+    }
+    let capsWord = event.modifierFlags.contains(.capsLock) && flags.isEmpty &&
+      event.characters?.first.map { $0.isASCII && $0.isUppercase } == true
+    guard ascii || !english.text.isEmpty || capsWord,
           rimeAPI.get_input(session).map({ $0.pointee == 0 }) ?? true else { return nil }
     // Pass shortcuts and navigation through after committing only original English.
     if !flags.subtracting(.shift).isEmpty {
@@ -709,9 +818,16 @@ private extension SquirrelInputController {
       return nil
     }
     let editing = !english.text.isEmpty
+    if !editing { english.beganInASCII = ascii }
+    let chosen = englishWords.indices.contains(englishIndex) ? englishWords[englishIndex] : nil
     switch code {
+    case 125,126:
+      guard !englishWords.isEmpty && flags.isEmpty else { if editing { finishEnglish() }; return nil }
+      englishIndex = max(0,min(englishWords.count-1,englishIndex+(code == 125 ? 1 : -1)))
     case 36, 76:
-      guard editing else { return nil }; finishEnglish(); return true
+      guard editing else { return nil }; finishEnglish(as:chosen); return true
+    case 49 where editing && flags.isEmpty && !english.text.contains(" "):
+      finishEnglish(as:chosen); return true
     case 53 where editing:
       english = EnglishDraft(); showEnglish(); return true
     case 51 where editing: english.erase(backwards: true)

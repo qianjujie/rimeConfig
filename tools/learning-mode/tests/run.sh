@@ -20,5 +20,14 @@ INSERT INTO lookup VALUES ('地方','[["place","地点"],["part","部分"],["loc
 INSERT INTO lookup VALUES ('收拾桌子','[["clear the table",""]]');
 SQL
 fi
-RIME_TEST_SENSES_DB="$senseDB" "$tmp/app/RimeLearning.app/Contents/MacOS/RimeLearning" --test "$tmp/Application Support/Profile" "$tmp"
+reverseDB=${LONGMAN_TEST_INDEX:-"$tmp/longman.sqlite3"}
+if [[ -z "${LONGMAN_TEST_INDEX:-}" ]]; then
+  sqlite3 "$reverseDB" <<'SQL'
+CREATE TABLE lookup (word TEXT PRIMARY KEY, choices TEXT NOT NULL) WITHOUT ROWID;
+INSERT INTO lookup VALUES ('LLM','[["法学硕士",""]]');
+INSERT INTO lookup VALUES ('bank','[["银行",""],["岸",""],["云团",""]]');
+INSERT INTO lookup VALUES ('translate','[["翻译",""],["导致",""]]');
+SQL
+fi
+RIME_TEST_LONGMAN_DB="$reverseDB" RIME_TEST_SENSES_DB="$senseDB" "$tmp/app/RimeLearning.app/Contents/MacOS/RimeLearning" --test "$tmp/Application Support/Profile" "$tmp"
 echo "Test profile and rendered panels: $tmp"

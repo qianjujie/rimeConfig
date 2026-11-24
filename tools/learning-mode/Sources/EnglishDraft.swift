@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import Foundation
 
-// Only in Squirrel's English mode with learning explicitly enabled. Space is text.
+// Only in Squirrel's English mode with learning explicitly enabled. Shift-Space starts a multiword draft.
 struct EnglishDraft {
   private(set) var text = ""
+  var beganInASCII = true
   private var offset = 0
   var caret: Int { text.prefix(offset).utf16.count }
   // A reading copy only. The editor, caret and ordinary Return always use text.
