@@ -8,7 +8,7 @@ support="$HOME/Library/Application Support/RimeLearning"
 id=local.rime.inputmethod.Learning
 get() { /usr/libexec/PlistBuddy -c "Print $2" "$1/Contents/Info.plist"; }
 [[ "$(get "$built" CFBundleIdentifier)" = "$id" && "$(get "$dest" CFBundleIdentifier)" = "$id" ]]
-[[ "$(get "$built" CFBundleVersion)" = "2.9.1" ]]
+[[ "$(get "$built" CFBundleVersion)" = "2.9.7" ]]
 codesign --verify --strict --deep "$built"
 mkdir -p "$support/Backups"
 backup=$(mktemp -d "$support/Backups/before-xiaohe.XXXXXX")

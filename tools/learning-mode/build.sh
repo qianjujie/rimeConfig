@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 stock="/Library/Input Methods/Squirrel.app/Contents"
 version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$stock/Info.plist")
 [[ "$version" = "1.1.2" ]] || { echo "Requires stock Squirrel 1.1.2 (found: $version)" >&2; exit 1; }
-out=${1:-"$PWD/dist/xiaohe-2.9.1"}
+out=${1:-"$PWD/dist/xiaohe-2.9.7"}
 if [[ -e "$out/RimeLearning.app" ]]; then
   echo "Existing build kept. Specify a fresh output directory: ./build.sh <directory>" >&2
   exit 1

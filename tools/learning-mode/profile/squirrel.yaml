@@ -1,4 +1,4 @@
-config_version: "2.5"
+config_version: "2.8"
 show_notifications_when: never
 style:
   color_scheme: light
@@ -88,3 +88,39 @@ preset_color_schemes:
     hilited_candidate_back_color: 0xD8D3D1
     hilited_candidate_text_color: 0x282321
     hilited_candidate_label_color: 0x504946
+  wechat_light:
+    name: 翠微
+    back_color: 0xFFFFFF
+    text_color: 0x444444
+    candidate_text_color: 0x444444
+    label_color: 0x888888
+    hilited_candidate_back_color: 0x76B100
+    hilited_candidate_text_color: 0xFFFFFF
+    hilited_candidate_label_color: 0xFFFFFF
+  wechat_dark:
+    name: 翠微·暗
+    back_color: 0x151515
+    text_color: 0xBBBBBB
+    candidate_text_color: 0xBBBBBB
+    label_color: 0x999999
+    hilited_candidate_back_color: 0x6FA800
+    hilited_candidate_text_color: 0xFFFFFF
+    hilited_candidate_label_color: 0xFFFFFF
+  control_blue_light:
+    name: 晴空
+    back_color: 0xFFFFFF
+    text_color: 0x444444
+    candidate_text_color: 0x444444
+    label_color: 0x888888
+    hilited_candidate_back_color: 0xFF7A00
+    hilited_candidate_text_color: 0xFFFFFF
+    hilited_candidate_label_color: 0xFFFFFF
+  control_blue_dark:
+    name: 晴空·暗
+    back_color: 0x27201C
+    text_color: 0xEDE3DC
+    candidate_text_color: 0xEDE3DC
+    label_color: 0xBDAA9E
+    hilited_candidate_back_color: 0xC86C28
+    hilited_candidate_text_color: 0xFFFFFF
+    hilited_candidate_label_color: 0xFFF6F2

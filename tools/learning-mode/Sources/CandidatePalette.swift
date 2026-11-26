@@ -1,10 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import AppKit
 
+enum CandidateAppearance {
+  #if LEARNING_TESTS
+  static let defaults = UserDefaults(suiteName: "local.rime.appearance-test." + UUID().uuidString)!
+  #else
+  static let defaults = UserDefaults.standard
+  #endif
+
+  static var popupAnimationEnabled: Bool {
+    get { defaults.bool(forKey: "CandidatePopupAnimationEnabled") }
+    set { defaults.set(newValue, forKey: "CandidatePopupAnimationEnabled") }
+  }
+}
+
 enum CandidatePalette: String, CaseIterable {
-  case jade, mist, amber, graphite
+  case jade, mist, amber, graphite, wechat, controlBlue = "control_blue"
   var title: String {
-    switch self { case .jade: "青瓷"; case .mist: "雾蓝"; case .amber: "琥珀"; case .graphite: "石墨" }
+    switch self { case .jade: "青瓷"; case .mist: "雾蓝"; case .amber: "琥珀"; case .graphite: "石墨"; case .wechat: "翠微"; case .controlBlue: "晴空" }
   }
   func scheme(dark: Bool) -> String {
     let mode = dark ? "dark" : "light"
@@ -12,18 +25,13 @@ enum CandidatePalette: String, CaseIterable {
   }
 
   private static let key = "CandidatePalette"
-  #if LEARNING_TESTS
-  static let defaults = UserDefaults(suiteName: "local.rime.palette-test." + UUID().uuidString)!
-  #else
-  static let defaults = UserDefaults.standard
-  #endif
   static var current: Self {
-    get { defaults.string(forKey: key).flatMap(Self.init(rawValue:)) ?? .jade }
-    set { defaults.set(newValue.rawValue, forKey: key) }
+    get { CandidateAppearance.defaults.string(forKey: key).flatMap(Self.init(rawValue:)) ?? .jade }
+    set { CandidateAppearance.defaults.set(newValue.rawValue, forKey: key) }
   }
 }
 
-/// A single menu command works with IMK's cross-process menu. Its four choices
+/// A single menu command works with IMK's cross-process menu. Its choices
 /// use native buttons and the same day/night palettes as the candidate panel.
 final class PalettePicker: NSPanel {
   private let choose: (CandidatePalette) -> Void
@@ -31,7 +39,13 @@ final class PalettePicker: NSPanel {
   init(config: SquirrelConfig, choose: @escaping (CandidatePalette) -> Void) {
     self.choose = choose
     tiles = CandidatePalette.allCases.map { PaletteTile(palette: $0, config: config) }
-    super.init(contentRect: NSRect(x: 0, y: 0, width: 394, height: 212),
+    let rows = (tiles.count + 1) / 2
+    let tileWidth = tiles.map(\.sampleSize.width).max()! + 6
+    let tileHeight = tiles.map(\.sampleSize.height).max()! + 31
+    let gap: CGFloat = 14, margin: CGFloat = 16
+    let width = 2 * tileWidth + 2 * margin + gap
+    let height = CGFloat(rows) * tileHeight + CGFloat(rows - 1) * gap + 2 * margin
+    super.init(contentRect: NSRect(x: 0, y: 0, width: width, height: height),
                styleMask: [.titled, .closable], backing: .buffered, defer: false)
     title = "主题"
     collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
@@ -41,7 +55,9 @@ final class PalettePicker: NSPanel {
     let content = PaletteBackdrop(frame: contentView!.bounds)
     contentView = content
     for (index, tile) in tiles.enumerated() {
-      tile.frame = NSRect(x: 16 + (index % 2) * 187, y: 110 - (index / 2) * 96, width: 175, height: 88)
+      tile.frame = NSRect(x: margin + CGFloat(index % 2) * (tileWidth + gap),
+                          y: margin + CGFloat(rows - 1 - index / 2) * (tileHeight + gap),
+                          width: tileWidth, height: tileHeight)
       tile.target = self
       tile.action = #selector(selectTile(_:))
       content.addSubview(tile)
@@ -86,38 +102,68 @@ private final class PaletteBackdrop: NSView {
 
 final class PaletteTile: NSButton {
   let palette: CandidatePalette
-  private let day = SquirrelTheme()
-  private let night = SquirrelTheme()
+  private let day: SquirrelTheme
+  private let night: SquirrelTheme
+  private let daySample: NSView
+  private let nightSample: NSView
+  private var dark: Bool { effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua }
+  var sampleSize: NSSize {
+    NSSize(width: max(daySample.frame.width, nightSample.frame.width),
+           height: max(daySample.frame.height, nightSample.frame.height))
+  }
   init(palette: CandidatePalette, config: SquirrelConfig) {
     self.palette = palette
-    super.init(frame: .zero)
+    let day = SquirrelTheme(), night = SquirrelTheme()
     day.load(config: config, dark: false, palette: palette)
     night.load(config: config, dark: true, palette: palette)
+    self.day = day; self.night = night
+    daySample = SquirrelPanel.paletteSample(theme: day)
+    nightSample = SquirrelPanel.paletteSample(theme: night)
+    super.init(frame: .zero)
     title = palette.title
     setButtonType(.momentaryPushIn)
     isBordered = false
     focusRingType = .none
+    for sample in [daySample, nightSample] {
+      addSubview(sample)
+      sample.setFrameOrigin(NSPoint(x: 3, y: 3))
+    }
+    updateAppearance()
     setAccessibilityLabel(palette.title)
+    setAccessibilityChildren([])
   }
   required init?(coder: NSCoder) { fatalError("Not created from a nib") }
   override var isFlipped: Bool { true }
+  // The sample contains a real text view; clicks anywhere still select the theme.
+  override func hitTest(_ point: NSPoint) -> NSView? { super.hitTest(point) == nil ? nil : self }
+  override func viewDidChangeEffectiveAppearance() {
+    super.viewDidChangeEffectiveAppearance()
+    updateAppearance()
+  }
+  private func updateAppearance() {
+    daySample.isHidden = dark
+    nightSample.isHidden = !dark
+    needsDisplay = true
+  }
   override func draw(_ dirtyRect: NSRect) {
-    let theme = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? night : day
-    let sample = NSBezierPath(roundedRect: NSRect(x: 1, y: 1, width: bounds.width - 2, height: 61), xRadius: 9, yRadius: 9)
+    let theme = dark ? night : day
+    let sample = dark ? nightSample : daySample
     let active = state == .on
-    let accent = palette == .graphite ? NSColor.labelColor : (theme.highlightedAttrs[.foregroundColor] as? NSColor ?? .labelColor)
-    theme.backgroundColor.setFill(); sample.fill()
+    let accent: NSColor = switch palette {
+    case .graphite: .labelColor
+    case .wechat, .controlBlue: theme.highlightedBackColor ?? .labelColor
+    default: theme.highlightedAttrs[.foregroundColor] as? NSColor ?? .labelColor
+    }
+    let ring = NSBezierPath(roundedRect: sample.frame.insetBy(dx: -1, dy: -1),
+                            xRadius: theme.cornerRadius + 1, yRadius: theme.cornerRadius + 1)
     (active || isHighlighted ? accent : NSColor.separatorColor).setStroke()
-    sample.lineWidth = active ? 1.5 : 0.75; sample.stroke()
-    let chip = NSBezierPath(roundedRect: NSRect(x: 9, y: 8, width: 62, height: 23), xRadius: 7, yRadius: 7)
-    theme.highlightedBackColor?.setFill(); chip.fill()
-    ("1  春天" as NSString).draw(at: NSPoint(x: 16, y: 9), withAttributes: theme.highlightedAttrs)
-    ("2  春田" as NSString).draw(at: NSPoint(x: 81, y: 9), withAttributes: theme.attrs)
-    ("spring" as NSString).draw(at: NSPoint(x: 16, y: 34), withAttributes: theme.previewAttrs)
-    (palette.title as NSString).draw(at: NSPoint(x: 3, y: 67), withAttributes:
+    ring.lineWidth = active ? 1.5 : 0.75
+    ring.stroke()
+    let labelY = sampleSize.height + 9
+    (palette.title as NSString).draw(at: NSPoint(x: 3, y: labelY), withAttributes:
       [.font: NSFont.systemFont(ofSize: 14, weight: active ? .semibold : .regular), .foregroundColor: NSColor.labelColor])
     if active {
-      ("✓" as NSString).draw(at: NSPoint(x: bounds.width - 18, y: 66), withAttributes:
+      ("✓" as NSString).draw(at: NSPoint(x: sample.frame.maxX - 13, y: labelY - 1), withAttributes:
         [.font: NSFont.systemFont(ofSize: 15, weight: .semibold), .foregroundColor: NSColor.labelColor])
     }
   }

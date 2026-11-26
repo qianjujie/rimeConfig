@@ -89,6 +89,91 @@ enum LearningChecks {
         check(upper != nil && lower != nil && abs(upper! - lower!) <= 1, "translation and source do not share a visible left edge: " + name)
       }
     }
+    func checkPalettes() {
+      let original = snapshot(), translation = panel.learningLine
+      func openPicker() -> PalettePicker {
+        let item = c.menu().item(withTitle: "主题")!
+        c.doCommand(by: item.action, command: [kIMKCommandMenuItemName as String: item])
+        wait { delegate.palettePicker?.isVisible == true }
+        guard let picker = delegate.palettePicker else { check(false, "menu did not open chooser"); exit(1) }
+        check(picker.isVisible && picker.tiles.map(\.title) == ["青瓷","雾蓝","琥珀","石墨","翠微","晴空"], "theme choices not available")
+        check(picker.tiles.allSatisfy { picker.contentView!.bounds.contains($0.frame) }, "a theme tile is clipped")
+        check(picker.tiles.filter { $0.state == .on }.map(\.palette) == [CandidatePalette.current], "active tile not indicated")
+        return picker
+      }
+      for palette in CandidatePalette.allCases {
+        let picker = openPicker()
+        if palette == .jade {
+          _ = picker.makeFirstResponder(picker.tiles[0])
+          check(picker.tiles.allSatisfy { $0.focusRingType == .none }, "native focus ring covers sample translation")
+          screenshot("theme-picker", window: picker)
+          picker.appearance = NSAppearance(named: .darkAqua)
+          screenshot("theme-picker-dark", window: picker)
+          picker.appearance = nil
+        }
+        picker.tiles.first { $0.palette == palette }!.performClick(nil)
+        check(!picker.isVisible && CandidatePalette.current == palette && CandidateAppearance.defaults.string(forKey: "CandidatePalette") == palette.rawValue, "palette not saved")
+        check(snapshot() == original && panel.learningLine == translation && field.committed == "", "color switch changed active input")
+        let expected = SquirrelTheme()
+        expected.load(config: delegate.config!, dark: false, palette: palette)
+        check(body.currentTheme.highlightedBackColor != nil && body.currentTheme.highlightedBackColor == expected.highlightedBackColor, "wrong day palette")
+        screenshot("palette-" + palette.rawValue)
+        app.appearance = NSAppearance(named: .darkAqua); panel.appearance = app.appearance; c.testRefreshPanel()
+        let night = SquirrelTheme(); night.load(config: delegate.config!, dark: true, palette: palette)
+        check(body.currentTheme.highlightedBackColor == night.highlightedBackColor && night.highlightedBackColor != expected.highlightedBackColor, "wrong night palette")
+        screenshot("palette-" + palette.rawValue + "-dark")
+        app.appearance = NSAppearance(named: .aqua); panel.appearance = app.appearance; c.testRefreshPanel()
+      }
+      let picker = openPicker(); picker.tiles[0].performClick(nil)
+    }
+    if ProcessInfo.processInfo.environment["RIME_TEST_PALETTES_ONLY"] == "1" {
+      c.testSetup("learning_flypy", learning: true, ascii: false)
+      type("pkgo"); wait { c.testTranslation != nil }
+      checkPalettes()
+      delegate.showPalettes()
+      let picker = delegate.palettePicker!
+      let tile = picker.tiles.first { $0.palette == .controlBlue }!
+      tile.performClick(nil); picker.present()
+      for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+        app.appearance = NSAppearance(named: appearance); picker.appearance = app.appearance
+        let screen = NSScreen.main!.visibleFrame
+        panel.position = NSRect(x: screen.midX, y: screen.midY, width: 1, height: 18)
+        panel.learningLine = LearningLine(text: "spring", isTranslation: true)
+        panel.update(preedit: "", selRange: .empty, caretPos: 0, candidates: ["春天", "春田", "春"],
+                     comments: ["", "", ""], labels: [], highlighted: 0, page: 0, lastPage: true, update: true)
+        screenshot("theme-reference-" + mode)
+        screenshot(mode == "light" ? "theme-picker" : "theme-picker-dark", window: picker)
+        let samples = tile.subviews.filter { !$0.isHidden }
+        check(samples.count == 1, "tile should have exactly one visible preview")
+        let sample = samples[0], live = panel.contentView!
+        let source = sample.subviews.compactMap { $0 as? SquirrelView }.first!
+        let caption = sample.subviews.compactMap { $0 as? PreviewCaption }.first!
+        let liveCaption = live.subviews.compactMap { $0 as? PreviewCaption }.first!
+        // Live layout subtracts the real screen anchor; allow only floating-point roundoff.
+        func sameRect(_ a: NSRect, _ b: NSRect) -> Bool {
+          max(abs(a.minX-b.minX), abs(a.minY-b.minY), abs(a.width-b.width), abs(a.height-b.height)) < 0.000001
+        }
+        check(sameRect(sample.bounds, live.bounds) && sameRect(source.frame, body.frame) &&
+              sameRect(source.textView.frame, body.textView.frame) && sameRect(caption.frame, liveCaption.frame),
+              "tile must use the actual candidate and translation geometry")
+        check(source.textContentStorage.attributedString!.isEqual(to: body.textContentStorage.attributedString!) &&
+              caption.value.isEqual(to: liveCaption.value), "preview font, baseline or colour differs from live text")
+        for point in [NSPoint(x: 20, y: 14), NSPoint(x: 20, y: 38)] {
+          check(tile.hitTest(tile.convert(point, to: tile.superview)) === tile, "sample intercepted a theme click")
+        }
+        let r = tile.convert(sample.frame, to: picker.contentView!)
+        print("Sample matching reference (points):", mode, NSStringFromRect(r))
+      }
+      picker.orderOut(nil)
+      c.testClose(); delegate.config?.close(); api.cleanup_all_sessions(); api.finalize()
+      print("PASS: six native theme tiles, selection persistence and candidate rendering in light and dark")
+      exit(0)
+    }
+    if ProcessInfo.processInfo.environment["RIME_TEST_DIAGNOSTICS_ONLY"] == "1" {
+      checkPopupAnimation(c, panel)
+      checkDiagnostics(c, panel)
+      c.testClose(); delegate.config?.close(); api.cleanup_all_sessions(); api.finalize(); exit(0)
+    }
     if ProcessInfo.processInfo.environment["RIME_TEST_SENSES_DB"] != nil {
       c.testSetup("learning_flypy", learning:true, ascii:false)
       func compose(_ spelling: String, _ word: String) {
@@ -254,7 +339,7 @@ enum LearningChecks {
       print("PASS: complete phrase routing, Apple fallback, native panel, default/numbered English and Chinese commits")
       c.testClose(); delegate.config?.close(); api.cleanup_all_sessions(); api.finalize(); fflush(stdout); exit(0)
     }
-    check(c.menu().items.map(\.title) == ["翻译预览", "主题"], "native menu contains unrelated features")
+    check(c.menu().items.filter { !$0.title.isEmpty && $0.action != #selector(SquirrelInputController.revealDiagnostics(_:)) }.map(\.title) == ["翻译预览", "主题", "候选窗弹出动画", "状态诊断日志"], "native menu contains unrelated features")
     check(c.menu().items[0].state == .on, "default must be on")
     let id = "learning_flypy"
     do {
@@ -391,7 +476,6 @@ enum LearningChecks {
     type("ni"); wait { c.testTranslation != nil }; screenshot("you")
     _ = key("\u{1b}",53)
     type("zitihfxn"); wait { c.testTranslation != nil }; screenshot("font-size")
-    let original = snapshot(), translation = panel.learningLine
     let selectedTitle = (body.textContentStorage.attributedString!.string as NSString).range(of: "字体很小")
     check(selectedTitle.location != NSNotFound, "absent font sample")
     func assertFont(_ range: NSRange, _ size: CGFloat) {
@@ -401,39 +485,7 @@ enum LearningChecks {
     assertFont(selectedTitle, 16)
     let caption = panel.contentView!.subviews.compactMap { $0 as? PreviewCaption }.first!
     check(!caption.isHidden && (caption.value.attribute(.font, at:0,effectiveRange:nil) as? NSFont)?.pointSize == 14, "wrong preview font")
-    func openPicker() -> PalettePicker {
-      let item = c.menu().items[1]
-      c.doCommand(by: item.action, command: [kIMKCommandMenuItemName as String: item])
-      wait { delegate.palettePicker?.isVisible == true }
-      guard let picker = delegate.palettePicker else { check(false, "menu did not open chooser"); exit(1) }
-      check(picker.isVisible && picker.tiles.map(\.title) == ["青瓷","雾蓝","琥珀","石墨"], "theme choices not available")
-      check(picker.tiles.filter { $0.state == .on }.map(\.palette) == [CandidatePalette.current], "active tile not indicated")
-      return picker
-    }
-    for palette in CandidatePalette.allCases {
-      let picker = openPicker()
-      if palette == .jade {
-        _ = picker.makeFirstResponder(picker.tiles[0])
-        check(picker.tiles.allSatisfy { $0.focusRingType == .none }, "native focus ring covers sample translation")
-        screenshot("theme-picker", window: picker)
-        picker.appearance = NSAppearance(named: .darkAqua)
-        screenshot("theme-picker-dark", window: picker)
-        picker.appearance = nil
-      }
-      picker.tiles.first { $0.palette == palette }!.performClick(nil)
-      check(!picker.isVisible && CandidatePalette.current == palette && CandidatePalette.defaults.string(forKey: "CandidatePalette") == palette.rawValue, "palette not saved")
-      check(snapshot() == original && panel.learningLine == translation && field.committed == "", "color switch changed active input")
-      let expected = SquirrelTheme()
-      expected.load(config: delegate.config!, dark: false, palette: palette)
-      check(body.currentTheme.highlightedBackColor != nil && body.currentTheme.highlightedBackColor == expected.highlightedBackColor, "wrong day palette")
-      screenshot("palette-" + palette.rawValue)
-      app.appearance = NSAppearance(named: .darkAqua); panel.appearance = app.appearance; c.testRefreshPanel()
-      let night = SquirrelTheme(); night.load(config: delegate.config!, dark: true, palette: palette)
-      check(body.currentTheme.highlightedBackColor == night.highlightedBackColor && night.highlightedBackColor != expected.highlightedBackColor, "wrong night palette")
-      screenshot("palette-" + palette.rawValue + "-dark")
-      app.appearance = NSAppearance(named: .aqua); panel.appearance = app.appearance; c.testRefreshPanel()
-    }
-    let picker = openPicker(); picker.tiles[0].performClick(nil)
+    checkPalettes()
     print("font sample:", snapshot(), panel.learningLine?.text ?? "-")
     app.appearance = NSAppearance(named: .darkAqua); panel.appearance = app.appearance
     // Refresh the current composition without selecting another candidate.
@@ -661,5 +713,78 @@ enum LearningChecks {
     api.finalize()
     print("PASS: controller, actual Rime, bilingual model, idle redraw, selection and English editing")
     fflush(stdout); exit(0)
+  }
+}
+
+private extension LearningChecks {
+  static func checkPopupAnimation(_ c: SquirrelInputController, _ panel: SquirrelPanel) {
+    let title = "候选窗弹出动画"
+    check(c.menu().item(withTitle: title)?.state == .off && panel.animationBehavior == .none,
+          "candidate windows should show at their final size by default")
+    for enabled in [true, false] {
+      let menu = c.menu()!
+      let index = menu.indexOfItem(withTitle: title)
+      check(index >= 0, "missing popup animation command")
+      menu.performActionForItem(at: index)
+      let expected: NSWindow.AnimationBehavior = enabled ? .default : .none
+      let state: NSControl.StateValue = enabled ? .on : .off
+      check(menu.items[index].state == state && c.menu().item(withTitle: title)?.state == state,
+            "animation checkmark did not follow the setting")
+      check(panel.animationBehavior == expected && SquirrelPanel(position: .zero).animationBehavior == expected,
+            "animation setting must apply to both existing and new panels")
+    }
+    print("PASS: candidate popup animation off by default; menu restores and disables system animation")
+  }
+
+  static func checkDiagnostics(_ c: SquirrelInputController, _ panel: SquirrelPanel) {
+    let log = StateDiagnostics.shared
+    let path = StateDiagnostics.file
+    check(!log.enabled && c.menu().item(withTitle:"状态诊断日志")?.state == .off, "diagnostics must start off")
+    var source: StateDiagnostics.Source = .weType
+    log.readSource = { (source,false) }; log.panelIsSecure = { false }
+    func toggle() {
+      let m = c.menu()!
+      m.performActionForItem(at:m.indexOfItem(withTitle:"状态诊断日志"))
+    }
+    toggle()
+    check(log.enabled && c.menu().item(withTitle:"状态诊断日志")?.state == .on, "menu failed to start logging")
+    source = .learning; log.sample(.selectionNotice)
+    source = .weType  // no second notification: the independent reread must still see the reversal
+    RunLoop.main.run(until:Date(timeIntervalSinceNow:1.7))
+
+    let secret = "PRIVATE_SENTINEL"
+    func draw() {
+      panel.update(preedit:"",selRange:.empty,caretPos:0,candidates:[secret],comments:[secret],labels:[],
+                   highlighted:0,page:0,lastPage:true,update:true)
+    }
+    panel.learningLine = .pending
+    draw(); draw()
+    panel.refreshLearningLine(.init(text:secret,isTranslation:true))
+    panel.refreshLearningLine(.pending)
+    panel.hide()
+    log.panelIsSecure = { true }
+    draw(); panel.hide()
+    log.mode(ascii:false); log.mode(ascii:false); log.mode(ascii:true)
+    log.sample(.snapshot)
+    toggle()
+    let data = try! Data(contentsOf:path)
+    let text = String(decoding:data,as:UTF8.self)
+    check(!text.contains(secret), "content escaped into diagnostics")
+    let records = text.split(separator:"\n").map { try! JSONSerialization.jsonObject(with:Data($0.utf8)) as! [String:Any] }
+    let events = records.compactMap { $0["event"] as? String }
+    check(events == ["enabled","selectionNotice","settled","layout","preview","preview","hidden","mode","mode","snapshot","disabled"], "unexpected diagnostics: \(events)")
+    check(records[1]["from"] as? String == "weType" && records[1]["source"] as? String == "learning" &&
+          records[2]["source"] as? String == "weType", "switch reversal missing")
+    let sizes = records.compactMap { $0["panel"] as? [String:Any] }
+    let heights = sizes.map { $0["heightPt"] as! Int }
+    check(sizes.map { $0["captionVisible"] as! Bool } == [false,true,false] &&
+          sizes.allSatisfy { $0["rows"] as? Int == 1 } && heights[1] > heights[0] && heights[2] == heights[0], "wrong geometry trace")
+    check(records.allSatisfy { Set($0.keys).isSubset(of:["at","event","from","source","secure","ascii","panel"]) } &&
+          sizes.allSatisfy { Set($0.keys) == ["rows","heightPt","sourceHeightPt","captionVisible"] }, "unexpected diagnostic fields")
+    check(StateDiagnostics.Source.identify(secret) == .other, "unknown source not anonymized")
+    log.panelIsSecure = { false }; draw(); panel.hide(); log.sample(.selectionNotice)
+    RunLoop.main.run(until:Date(timeIntervalSinceNow:1.6))
+    check((try! Data(contentsOf:path)) == data && !log.enabled, "logging continued while off")
+    print("PASS: menu on/off, switch reversal, secure suppression, no content, panel heights in points: \(heights)")
   }
 }

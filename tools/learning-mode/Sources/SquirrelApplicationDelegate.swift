@@ -32,6 +32,7 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
   var enableNotifications = false
   func applicationWillFinishLaunching(_ notification: Notification) {
     addObservers()
+    StateDiagnostics.shared.applyPreference(onLaunch:true)
   }
 
   func applicationWillTerminate(_ notification: Notification) {
@@ -39,6 +40,7 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
     NotificationCenter.default.removeObserver(self)
     DistributedNotificationCenter.default().removeObserver(self)
     panel?.hide()
+    StateDiagnostics.shared.stopped()
   }
 
   func deploy() {
@@ -195,6 +197,13 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
     center.addObserver(forName: NSWorkspace.willPowerOffNotification, object: nil, queue: nil, using: workspaceWillPowerOff)
 
     let notifCenter = DistributedNotificationCenter.default()
+    notifCenter.addObserver(forName:StateDiagnostics.settingsChanged, object:nil, queue:.main) { _ in
+      StateDiagnostics.defaults.synchronize()
+      StateDiagnostics.shared.applyPreference()
+    }
+    notifCenter.addObserver(forName:StateDiagnostics.sampleRequested, object:nil, queue:.main) { _ in
+      StateDiagnostics.shared.sample(.snapshot)
+    }
     notifCenter.addObserver(forName: .init("RimeLearningReloadNotification"), object: nil, queue: nil, using: rimeNeedsReload)
     notifCenter.addObserver(forName: .init("RimeLearningSyncNotification"), object: nil, queue: nil, using: rimeNeedsSync)
   }

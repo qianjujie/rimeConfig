@@ -9,6 +9,7 @@ swiftc -parse-as-library -target "$(uname -m)-apple-macos26.4" -module-cache-pat
 mkdir -p "$tmp/Application Support/Profile"
 touch "$tmp/Application Support/Profile/.rime-learning-profile"
 LEARNING_TESTS=1 ./build.sh "$tmp/app"
+RIME_TEST_DIAGNOSTICS_ONLY=1 "$tmp/app/RimeLearning.app/Contents/MacOS/RimeLearning" --test "$tmp/Application Support/Profile" "$tmp"
 ./tests/check-memory.sh "$tmp/app/RimeLearning.app"
 "$tmp/app/RimeLearning.app/Contents/MacOS/RimeLearning" --test "$tmp/Application Support/Profile" "$tmp"
 # Use a separate process, so machines without the optional book keep the original Apple-only tests.

@@ -265,6 +265,7 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func activateServer(_ sender: Any!) {
+    StateDiagnostics.shared.sample(.active)
     self.client ?= sender as? IMKTextInput
     // print("[DEBUG] activateServer:")
     var keyboardLayout = NSApp.squirrelAppDelegate.config?.getString("keyboard_layout") ?? ""
@@ -300,6 +301,7 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func deactivateServer(_ sender: Any!) {
+    StateDiagnostics.shared.sample(.inactive)
     deferredEnglishShiftTap = nil
     // print("[DEBUG] deactivateServer: \(sender ?? "nil")")
     hidePalettes()
@@ -350,7 +352,37 @@ final class SquirrelInputController: IMKInputController {
     menu.addItem(toggle)
     let themes = menu.addItem(withTitle: "主题", action: #selector(showPreferences(_:)), keyEquivalent: "")
     themes.target = self
+    let animation = menu.addItem(withTitle: "候选窗弹出动画", action: #selector(togglePopupAnimation(_:)), keyEquivalent: "")
+    animation.target = self
+    animation.state = CandidateAppearance.popupAnimationEnabled ? .on : .off
+    menu.addItem(.separator())
+    let diagnostics = menu.addItem(withTitle:"状态诊断日志", action:#selector(toggleDiagnostics(_:)), keyEquivalent:"")
+    diagnostics.target = self
+    diagnostics.state = StateDiagnostics.shared.enabled ? .on : .off
+    if FileManager.default.fileExists(atPath:StateDiagnostics.file.path) {
+      let reveal = menu.addItem(withTitle:"显示诊断日志文件", action:#selector(revealDiagnostics(_:)), keyEquivalent:"")
+      reveal.target = self
+    }
     return menu
+  }
+
+  @objc func togglePopupAnimation(_ sender: Any?) {
+    CandidateAppearance.popupAnimationEnabled.toggle()
+    NSApp.squirrelAppDelegate.panel?.applyPopupAnimationPreference()
+    (sender as? NSMenuItem)?.state = CandidateAppearance.popupAnimationEnabled ? .on : .off
+  }
+
+  @objc func toggleDiagnostics(_ sender: Any?) {
+    StateDiagnostics.defaults.set(!StateDiagnostics.shared.enabled, forKey:StateDiagnostics.preference)
+    StateDiagnostics.shared.applyPreference()
+    (sender as? NSMenuItem)?.state = StateDiagnostics.shared.enabled ? .on : .off
+  }
+
+  @objc func revealDiagnostics(_ sender: Any?) {
+    let file = StateDiagnostics.file
+    if FileManager.default.fileExists(atPath:file.path) {
+      NSWorkspace.shared.activateFileViewerSelecting([file])
+    } else { NSSound.beep() }
   }
 
   override func showPreferences(_ sender: Any!) {
@@ -524,6 +556,7 @@ private extension SquirrelInputController {
 
     var status = RimeStatus_stdbool.rimeStructInit()
     if rimeAPI.get_status(session, &status) {
+      StateDiagnostics.shared.mode(ascii:status.is_ascii_mode)
       // enable schema specific ui style
       // swiftlint:disable:next identifier_name
       if let schema_id = status.schema_id, schemaId == "" || schemaId != String(cString: schema_id) {

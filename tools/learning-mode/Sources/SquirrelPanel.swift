@@ -13,14 +13,16 @@ final class SquirrelPanel: NSPanel {
   private let back: NSVisualEffectView
   private let preview = PreviewCaption()
   weak var inputController: SquirrelInputController?
-  let sublimeKeys = SublimePreviewKeys()
+  private let layoutOnly: Bool
+  private(set) lazy var sublimeKeys = SublimePreviewKeys()
+  private var layoutRows = 0
   var learningLine: LearningLine?
 
   // Repaint existing rows only; never ask Rime to recompute or select a candidate.
   func refreshLearningLine(_ text: LearningLine?) {
     guard learningLine != text, isVisible else { return }
     learningLine = text
-    show() // The source string, glyph layout and editor are untouched.
+    show(reason:.preview) // The source string, glyph layout and editor are untouched.
   }
 
   func redrawVisibleComposition() {
@@ -53,11 +55,14 @@ final class SquirrelPanel: NSPanel {
   private var lastPage: Bool = true
   private var pagingUp: Bool?
 
-  init(position: NSRect) {
+  init(position: NSRect, layoutOnly: Bool = false) {
+    self.layoutOnly = layoutOnly
     self.position = position
     self.view = SquirrelView(frame: position)
     self.back = NSVisualEffectView()
     super.init(contentRect: position, styleMask: .nonactivatingPanel, backing: .buffered, defer: true)
+    if !layoutOnly { _ = sublimeKeys }
+    applyPopupAnimationPreference()
     self.level = .init(Int(CGShieldingWindowLevel()))
     self.hidesOnDeactivate = false
     self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
@@ -77,6 +82,28 @@ final class SquirrelPanel: NSPanel {
     preview.isHidden = true
     contentView.addSubview(preview)
     self.contentView = contentView
+  }
+
+  /// Lay out a fixed example with the real TextKit views, then embed them in the picker.
+  /// This panel is never presented or attached to an input controller.
+  static func paletteSample(theme: SquirrelTheme) -> NSView {
+    let area = NSScreen.main?.visibleFrame ?? .zero
+    let panel = SquirrelPanel(position: .zero, layoutOnly: true)
+    panel.position = NSRect(x: area.midX, y: area.midY, width: 1, height: 18)
+    panel.view.lightTheme = theme
+    panel.view.darkTheme = theme
+    panel.learningLine = LearningLine(text: "spring", isTranslation: true)
+    panel.update(preedit: "", selRange: .empty, caretPos: 0, candidates: ["春天", "春田", "春"],
+                 comments: ["", "", ""], labels: [], highlighted: 0, page: 0, lastPage: true, update: true)
+    let sample = panel.contentView!
+    panel.contentView = nil
+    sample.autoresizingMask = []
+    return sample
+  }
+
+  func applyPopupAnimationPreference() {
+    // setFrame(animate: false) controls resizing, not the system animation on orderFront.
+    animationBehavior = CandidateAppearance.popupAnimationEnabled ? .default : .none
   }
 
   var linear: Bool {
@@ -173,6 +200,7 @@ final class SquirrelPanel: NSPanel {
   }
 
   func hide() {
+    StateDiagnostics.shared.hidden()
     sublimeKeys.clear()
     learningLine = nil
     inputController = nil
@@ -340,6 +368,7 @@ final class SquirrelPanel: NSPanel {
       text.append(line)
     }
 
+    layoutRows = linear ? rowEnds.count : candidates.count
     view.highlightsEnglishDraft = candidates.isEmpty && !preedit.isEmpty && learningLine != nil
     // text done!
     view.textView.textContentStorage?.attributedString = text
@@ -411,7 +440,7 @@ private extension SquirrelPanel {
   // Get the window size, the windows will be the dirtyRect in
   // SquirrelView.drawRect
   // swiftlint:disable:next cyclomatic_complexity
-  func show() {
+  func show(reason: StateDiagnostics.Event = .layout) {
     currentScreen()
     let theme = view.currentTheme
     if theme.native || view.darkTheme.available {
@@ -579,6 +608,7 @@ private extension SquirrelPanel {
     } else {
       back.isHidden = true
     }
+    guard !layoutOnly else { return } // Stop after layout: never show or log a sample as an input session.
     alphaValue = theme.alpha
     #if LEARNING_TESTS
     alphaValue = 0  // Exercise the real NSPanel and capture its content without overlaying the desktop.
@@ -587,7 +617,10 @@ private extension SquirrelPanel {
     invalidateShadow()
     if NSApp.isHidden { NSApp.unhideWithoutActivation() }
     if !isVisible { orderFrontRegardless() }
-    // voila!
+    if StateDiagnostics.shared.enabled {
+      StateDiagnostics.shared.panel(reason, .init(rows:layoutRows, heightPt:Int(frame.height.rounded()),
+          sourceHeightPt:Int(sourceOnScreen.height.rounded()), captionVisible:!preview.isHidden))
+    }
   }
 
   func show(status message: String) {
@@ -602,7 +635,8 @@ private extension SquirrelPanel {
     view.textView.setLayoutOrientation(vertical ? .vertical : .horizontal)
     view.drawView(candidateRanges: [NSRange(location: 0, length: text.length)], hilightedIndex: -1,
                   preeditRange: .empty, highlightedPreeditRange: .empty, canPageUp: false, canPageDown: false)
-    show()
+    layoutRows = 0
+    show(reason:.status)
 
     statusTimer?.invalidate()
     statusTimer = Timer.scheduledTimer(withTimeInterval: SquirrelTheme.showStatusDuration, repeats: false) { _ in

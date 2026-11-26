@@ -45,6 +45,23 @@ struct SquirrelApp {
         case "--register-input-source", "--install":
           installer.register()
           return true
+        case "--diagnostics":
+          let prefs = StateDiagnostics.defaults
+          switch Array(args.dropFirst(2)) {
+          case ["on"], ["off"]:
+            prefs.set(args[2] == "on", forKey:StateDiagnostics.preference)
+            prefs.synchronize()
+            DistributedNotificationCenter.default().postNotificationName(StateDiagnostics.settingsChanged, object:nil, userInfo:nil, deliverImmediately:true)
+          case ["snapshot"]:
+            guard prefs.bool(forKey:StateDiagnostics.preference) else { print("Diagnostics are off"); exit(1) }
+            DistributedNotificationCenter.default().postNotificationName(StateDiagnostics.sampleRequested, object:nil, userInfo:nil, deliverImmediately:true)
+            print("Requested a state sample from the running input method.")
+          case ["status"]: break
+          default: print("Usage: --diagnostics on|off|status|snapshot"); exit(2)
+          }
+          print("Diagnostics preference: " + (prefs.bool(forKey:StateDiagnostics.preference) ? "on" : "off"))
+          print(StateDiagnostics.file.path)
+          return true
         case "--status":
           print(installer.enabledModes().map(\.rawValue).joined(separator: "\n"))
           return true
@@ -144,6 +161,7 @@ struct SquirrelApp {
   static let helpDoc = """
 Supported arguments:
 Perform actions:
+  --diagnostics on|off|status|snapshot   local state-only diagnostics
   --quit                     quit all Squirrel process
   --reload                   deploy
   --sync                     sync user data
